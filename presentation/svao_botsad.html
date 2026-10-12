@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>СВАО и Ботанический сад</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --bg: #F7F5F0; --ink: #1E2A24; --muted: #5E6B64; --line: #D9D4C7;
+    --green: #2F6B4F; --green-soft: #DCEBE2; --amber: #B8742A; --amber-soft: #F3E4CF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", "DejaVu Sans", sans-serif; color: var(--ink); background: var(--bg); }
+  .slide { width: 1280px; height: 720px; padding: 64px 80px; position: relative; overflow: hidden;
+           page-break-after: always; background: var(--bg); display: flex; flex-direction: column; }
+  .slide:last-child { page-break-after: auto; }
+  .num { position: absolute; bottom: 32px; right: 80px; font-size: 14px; color: var(--muted); }
+  .foot { position: absolute; bottom: 32px; left: 80px; font-size: 14px; color: var(--muted); }
+  .kicker { font-size: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--green); margin-bottom: 14px; }
+  h1 { font-family: "Inter Display", "Inter", sans-serif; font-size: 64px; line-height: 1.05; font-weight: 700; letter-spacing: -.02em; }
+  h2 { font-family: "Inter Display", "Inter", sans-serif; font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -.01em; margin-bottom: 32px; }
+  p, li { font-size: 21px; line-height: 1.5; }
+  .muted { color: var(--muted); }
+
+  /* title */
+  .title { background: var(--green); color: #fff; justify-content: center; }
+  .title .kicker { color: #BFDCCB; }
+  .title .sub { font-size: 24px; margin-top: 24px; color: #E4F0E9; max-width: 820px; line-height: 1.45; }
+  .title .num, .title .foot { color: #BFDCCB; }
+  .title .ring { position: absolute; right: -140px; top: -140px; width: 560px; height: 560px; border-radius: 50%; border: 56px solid rgba(255,255,255,.08); }
+
+  /* map */
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; flex: 1; align-items: center; }
+  .callout { background: #fff; border-left: 6px solid var(--green); padding: 24px 28px; border-radius: 4px; }
+  .callout p + p { margin-top: 12px; }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; font-size: 19px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 15px; text-transform: uppercase; letter-spacing: .06em; padding: 0 16px 12px; border-bottom: 2px solid var(--ink); }
+  td { padding: 18px 16px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.4; }
+  td:first-child { font-weight: 600; width: 22%; }
+  .tag { display: inline-block; font-size: 13px; padding: 2px 8px; border-radius: 3px; background: var(--amber-soft); color: #7A4A14; margin-left: 6px; vertical-align: 2px; }
+
+  /* chart */
+  .chart { flex: 1; display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+  .row { display: grid; grid-template-columns: 300px 1fr; align-items: center; gap: 20px; }
+  .row .lbl { font-size: 18px; font-weight: 500; text-align: right; }
+  .row .lbl small { display: block; font-size: 14px; color: var(--muted); font-weight: 400; }
+  .track { position: relative; height: 34px; }
+  .bar { position: absolute; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .bar.g { background: var(--green); color: #fff; }
+  .bar.a { background: var(--amber); color: #fff; }
+  .bar.n { background: #8C968F; color: #fff; }
+  .axis { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+  .ticks { position: relative; height: 24px; border-top: 1px solid var(--ink); }
+  .ticks span { position: absolute; top: 6px; font-size: 14px; color: var(--muted); transform: translateX(-50%); }
+  .legend { display: flex; gap: 28px; font-size: 15px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
+
+  /* compare cards */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; flex: 1; }
+  .card { background: #fff; border-radius: 6px; padding: 28px 32px; border-top: 6px solid var(--green); }
+  .card.alt { border-top-color: var(--amber); }
+  .card h3 { font-size: 24px; margin-bottom: 16px; }
+  .card ul { list-style: none; }
+  .card li { font-size: 18px; padding: 7px 0 7px 26px; position: relative; line-height: 1.4; }
+  .card li::before { content: "+"; position: absolute; left: 0; font-weight: 700; color: var(--green); }
+  .card li.minus::before { content: "–"; color: var(--amber); }
+
+  /* verdict */
+  .verdict { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .v { padding: 32px; border-radius: 6px; }
+  .v.g { background: var(--green-soft); }
+  .v.a { background: var(--amber-soft); }
+  .v .who { font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
+  .v .pick { font-size: 30px; font-weight: 700; margin-bottom: 12px; font-family: "Inter Display", "Inter", sans-serif; }
+  .v p { font-size: 19px; }
+  .note { margin-top: 36px; font-size: 18px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; line-height: 1.5; }
+
+  .src li { font-size: 16px; line-height: 1.7; color: var(--muted); }
+  .src { columns: 2; column-gap: 48px; list-style: none; }
+  .src b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="slide title">
+  <div class="ring"></div>
+  <div class="kicker">Москва · рынок жилья · октябрь 2026</div>
+  <h1>Ботанический сад<br>и остальной СВАО</h1>
+  <div class="sub">Сравнение цен, транспорта и среды: стоит ли доплачивать за район у Ботанического сада</div>
+  <div class="num">1</div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="kicker">Сначала о географии</div>
+  <h2>Ботанический сад — это часть СВАО,<br>а не отдельный район</h2>
+  <div class="twocol">
+    <div>
+      <p>Метро и парк стоят на стыке трёх районов округа:</p>
+      <ul style="margin:18px 0 0 24px">
+        <li><b>Свиблово</b> — к востоку от метро</li>
+        <li><b>Ростокино</b> — у МЦК и долины Яузы</li>
+        <li><b>Останкинский</b> — у ВДНХ и телебашни</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <p><b>Что с чем сравниваем</b></p>
+      <p>Район у Ботанического сада против остального СВАО: Бибирево, Отрадное, Медведково, Алтуфьевский, Лианозово, Северный и других.</p>
+    </div>
+  </div>
+  <div class="num">2</div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="kicker">Цены за квадратный метр</div>
+  <h2>Что показывают объявления</h2>
+  <table>
+    <thead><tr><th>Сегмент</th><th>Район Ботанического сада</th><th>СВАО и Москва</th></tr></thead>
+    <tbody>
+      <tr><td>Вторичка</td>
+          <td>Свиблово: примерно 370–495 тыс. ₽/м²<br>Ростокино: примерно 310–675 тыс. ₽/м²</td>
+          <td>Свежей средней по СВАО нет.<br>Москва в среднем: 466–515 тыс. ₽/м²</td></tr>
+      <tr><td>Новостройки</td>
+          <td>Обычно 350–550 тыс. ₽/м²<br>ЖК «Режиссёр»: 500–780 тыс. ₽/м²</td>
+          <td>На окраинах округа обычно дешевле<span class="tag">нет точных цифр</span></td></tr>
+      <tr><td>Соотношение районов</td>
+          <td>Останкинский дороже, чем Ростокино и Свиблово</td>
+          <td>По данным Domell <span class="tag">старые данные</span></td></tr>
+    </tbody>
+  </table>
+  <div class="foot">Это цены в объявлениях и данные агрегаторов, а не цены реальных сделок.</div>
+  <div class="num">3</div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="kicker">Диапазоны цен</div>
+  <h2>Цена за м², тыс. ₽</h2>
+  <div class="chart">
+    <!-- scale: 250..800 => 0..100% ; pos = (v-250)/550 -->
+    <div class="row"><div class="lbl">Свиблово<small>вторичка</small></div>
+      <div class="track"><div class="bar g" style="left:21.8%;width:22.7%">370–495</div></div></div>
+    <div class="row"><div class="lbl">Ростокино<small>вторичка и новостройки</small></div>
+      <div class="track"><div class="bar g" style="left:10.9%;width:67.3%">310–675</div></div></div>
+    <div class="row"><div class="lbl">У м. Ботанический сад<small>новостройки</small></div>
+      <div class="track"><div class="bar a" style="left:18.2%;width:36.4%">350–550</div></div></div>
+    <div class="row"><div class="lbl">ЖК «Режиссёр»<small>Ростокино</small></div>
+      <div class="track"><div class="bar a" style="left:45.5%;width:50.9%">500–780</div></div></div>
+    <div class="row"><div class="lbl">Москва в среднем<small>вторичка, 2026</small></div>
+      <div class="track"><div class="bar n" style="left:39.3%;width:8.9%">466–515</div></div></div>
+    <div class="axis"><div></div>
+      <div class="ticks">
+        <span style="left:0%">250</span><span style="left:18.2%">350</span><span style="left:36.4%">450</span>
+        <span style="left:54.5%">550</span><span style="left:72.7%">650</span><span style="left:90.9%">750</span>
+      </div></div>
+    <div class="legend"><span><i style="background:var(--green)"></i>Вторичка</span><span><i style="background:var(--amber)"></i>Новостройки</span><span><i style="background:#8C968F"></i>Москва в среднем</span></div>
+  </div>
+  <div class="num">4</div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="kicker">Плюсы и минусы</div>
+  <h2>Чем различаются районы</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>У Ботанического сада</h3>
+      <ul>
+        <li>Рядом Ботанический сад, ВДНХ, Лосиный остров и долина Яузы</li>
+        <li>Рыжая ветка метро, до центра примерно 15–20 минут</li>
+        <li>Рядом МЦК и МЦД-1, удобные пересадки</li>
+        <li>Квартиры проще продать</li>
+        <li class="minus">Метр дороже, много бизнес-класса</li>
+        <li class="minus">Шумно у проспекта Мира и железной дороги</li>
+      </ul>
+    </div>
+    <div class="card alt">
+      <h3>Остальной СВАО</h3>
+      <ul>
+        <li>Метр обычно дешевле, особенно в панельных домах</li>
+        <li>Много квартир по реновации и комфорт-классу</li>
+        <li>Есть свои парки: Бабушкинский, Лианозовский</li>
+        <li class="minus">Дольше ехать до центра</li>
+        <li class="minus">Часть районов далеко от метро</li>
+        <li class="minus">Цены растут медленнее</li>
+      </ul>
+    </div>
+  </div>
+  <div class="num">5</div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="kicker">Вывод</div>
+  <h2>Что выбрать</h2>
+  <div class="verdict">
+    <div class="v g">
+      <div class="who">Если важны</div>
+      <div class="pick">парки, транспорт и ликвидность</div>
+      <p>Ботанический сад — один из лучших вариантов в СВАО. Заложите наценку к среднему по округу.</p>
+    </div>
+    <div class="v a">
+      <div class="who">Если важна</div>
+      <div class="pick">цена за метр</div>
+      <p>Северная часть СВАО заметно дешевле, но дорога до центра там дольше.</p>
+    </div>
+  </div>
+  <div class="note">Перед покупкой сверьте цены по реальным сделкам: выписки Росреестра, аналитика ЦИАН и Яндекс Недвижимости с фильтром по району.</div>
+  <div class="num">6</div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="kicker">Источники</div>
+  <h2>Откуда данные</h2>
+  <ul class="src">
+    <li><b>Циан</b> — Ростокино, Свиблово (объявления)</li>
+    <li><b>Domell</b> — цены по районам СВАО</li>
+    <li><b>novostroev.ru</b> — новостройки Ростокино</li>
+    <li><b>mskguru.ru</b> — ЖК у м. Ботанический сад</li>
+    <li><b>ФСК, ПИК</b> — цены застройщиков</li>
+    <li><b>Новострой.ру, Urbanus</b> — новостройки и апартаменты</li>
+    <li><b>realtystats.ru</b> — средняя цена по Москве</li>
+    <li><b>Realtymag, Restate</b> — индексы цен Москвы</li>
+    <li><b>allestate.pro</b> — карта цен, осень 2026</li>
+  </ul>
+  <div class="foot">Данные собраны в октябре 2026 года из открытых объявлений и агрегаторов.</div>
+  <div class="num">7</div>
+</section>
+
+</body>
+</html>
