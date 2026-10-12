@@ -80,6 +80,13 @@
   .src li { font-size: 16px; line-height: 1.7; color: var(--muted); }
   .src { columns: 2; column-gap: 48px; list-style: none; }
   .src b { color: var(--ink); font-weight: 600; }
+  .rooms td, .rooms th { padding-top: 13px; padding-bottom: 13px; }
+  .rooms td:first-child { width: 9%; }
+  .rooms .grp { text-align: center; border-bottom: none; padding-bottom: 4px; color: var(--ink); font-size: 16px; }
+  .rooms .sep { border-left: 2px solid var(--line); }
+  .rooms .mn { color: var(--green); font-weight: 600; }
+  .rooms .mx { color: var(--amber); font-weight: 600; }
+  .na { color: var(--muted); font-size: 15px; font-weight: 400; }
 </style>
 </head>
 <body>
@@ -138,6 +145,29 @@
 
 <!-- 4 -->
 <section class="slide">
+  <div class="kicker">Циан · цены квартир целиком, млн ₽</div>
+  <h2 style="margin-bottom:22px">1-, 2- и 3-комнатные: минимум и максимум</h2>
+  <table class="rooms">
+    <thead>
+      <tr><th class="grp"></th><th class="grp" colspan="3">У станции Ботанический сад</th><th class="grp sep" colspan="3">СВАО в целом</th></tr>
+      <tr><th>Тип</th><th>Мин.</th><th>Средняя</th><th>Макс.</th><th class="sep">Мин.</th><th>Средняя</th><th>Макс.</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1к</td><td class="mn">5,4<br><span class="na">вторичка</span></td><td>14,5</td><td class="mx">34,4</td>
+          <td class="sep mn">6,7<br><span class="na">вторичка</span></td><td>15,5<br><span class="na">новостройки</span></td><td class="na">нет данных</td></tr>
+      <tr><td>2к</td><td class="mn">5,9<br><span class="na">вторичка</span></td><td>15,7</td><td class="na">нет данных<br>(в ЖК LIFE от 34)</td>
+          <td class="sep mn">6,6<br><span class="na">вторичка</span></td><td>18,0<br><span class="na">вторичка от собств.</span></td><td class="na">нет данных</td></tr>
+      <tr><td>3к</td><td class="mn">10,1<br><span class="na">с евроремонтом</span></td><td>19,7<br><span class="na">вторичка от собств.</span></td><td class="mx">69,2<br><span class="na">вторичка от собств.</span></td>
+          <td class="sep mn">6,9<br><span class="na">вторичка</span></td><td>33,2<br><span class="na">с евроремонтом</span></td><td class="na">нет данных</td></tr>
+    </tbody>
+  </table>
+  <p class="muted" style="font-size:15px;margin-top:16px;line-height:1.45">Минимумы в новостройках СВАО: 1к от 8,2, 2к от 10,4, 3к от 19,6 млн ₽. Отдельные объявления дешевле (1к от 3,7 млн, пятиэтажки от 2,5 млн) скорее всего доли или ошибки разметки, их в таблицу не включали.<br>
+  Авито закрыт для автоматического сбора, поэтому там данные не проверены. Максимумы по СВАО надо смотреть на Циан, отсортировав выдачу по убыванию цены.</p>
+  <div class="num">4</div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
   <div class="kicker">Диапазоны цен</div>
   <h2>Цена за м², тыс. ₽</h2>
   <div class="chart">
@@ -159,10 +189,10 @@
       </div></div>
     <div class="legend"><span><i style="background:var(--green)"></i>Вторичка</span><span><i style="background:var(--amber)"></i>Новостройки</span><span><i style="background:#8C968F"></i>Москва в среднем</span></div>
   </div>
-  <div class="num">4</div>
+  <div class="num">5</div>
 </section>
 
-<!-- 5 -->
+<!-- 6 -->
 <section class="slide">
   <div class="kicker">Плюсы и минусы</div>
   <h2>Чем различаются районы</h2>
@@ -190,10 +220,10 @@
       </ul>
     </div>
   </div>
-  <div class="num">5</div>
+  <div class="num">6</div>
 </section>
 
-<!-- 6 -->
+<!-- 7 -->
 <section class="slide">
   <div class="kicker">Вывод</div>
   <h2>Что выбрать</h2>
@@ -210,15 +240,16 @@
     </div>
   </div>
   <div class="note">Перед покупкой сверьте цены по реальным сделкам: выписки Росреестра, аналитика ЦИАН и Яндекс Недвижимости с фильтром по району.</div>
-  <div class="num">6</div>
+  <div class="num">7</div>
 </section>
 
-<!-- 7 -->
+<!-- 8 -->
 <section class="slide">
   <div class="kicker">Источники</div>
   <h2>Откуда данные</h2>
   <ul class="src">
-    <li><b>Циан</b> — Ростокино, Свиблово (объявления)</li>
+    <li><b>Циан</b> — объявления 1к/2к/3к у станции Ботанический сад и в СВАО</li>
+    <li><b>Циан</b> — Ростокино, Свиблово</li>
     <li><b>Domell</b> — цены по районам СВАО</li>
     <li><b>novostroev.ru</b> — новостройки Ростокино</li>
     <li><b>mskguru.ru</b> — ЖК у м. Ботанический сад</li>
@@ -229,7 +260,7 @@
     <li><b>allestate.pro</b> — карта цен, осень 2026</li>
   </ul>
   <div class="foot">Данные собраны в октябре 2026 года из открытых объявлений и агрегаторов.</div>
-  <div class="num">7</div>
+  <div class="num">8</div>
 </section>
 
 </body>
