@@ -14,7 +14,10 @@ const C = {
   t: '#2fd4c8', cy: '#8eeeff', r: '#ff3b3b', a: '#ffb547', w: '#eaf6f7', mute: '#6f8f97',
   sleeve: '#1b2a4a', cuff: '#c9262b', skin: '#e0a47c', skin2: '#c4875f', zomb: '#86c35a'
 };
-const g = document.getElementById('c').getContext('2d');
+const main = document.getElementById('c').getContext('2d');
+const mk = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; return [c, c.getContext('2d')]; };
+const [buf, bctx] = mk(), [buf2, b2ctx] = mk();
+let g = main;
 
 // ---------- utils ----------
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
@@ -51,9 +54,9 @@ function wrap(s, maxW) {
 
 // ---------- timeline (no voice: timing by reading speed) ----------
 const BEATS = [
-  ['A', 'Наверху — _конец_ _света._'],
-  ['A', 'Под тобой — *2 300* человек.'],
-  ['A', 'И ключ от затвора — *только* *у* *тебя.*'],
+  ['CITY', 'Наверху — _конец_ _света._'],
+  ['CROWD', 'Под тобой — *2 300* человек.'],
+  ['LEVER', 'И ключ от затвора — *только* *у* *тебя.*'],
   ['A', 'У тебя *90* *секунд* и *три* *решения.*'],
   ['A', 'Посмотрим, сможешь ли ты потом с ними жить.'],
   ['B', '00:12. Последний поезд _не_ _пришёл._'],
@@ -66,9 +69,9 @@ const BEATS = [
   ['D', null, 3.0],
   ['D', '*Ты* *ждёшь.*', 1.6],
   ['E', 'Двадцать человек. Двести. *Две* *тысячи.*'],
-  ['E', 'Ты слышишь их шаги…'],
+  ['RUN', 'Ты слышишь их шаги…'],
   ['E', '…а потом — _другие._ Быстрые. Неровные.'],
-  ['E', 'У турникетов — те, кто _уже_ _не_ _люди._'],
+  ['ZRUSH', 'У турникетов — те, кто _уже_ _не_ _люди._'],
   ['F', 'Снаружи ещё *тридцать* живых.'],
   ['F', 'Прямо за ними — _они._'],
   ['F', 'Подождёшь ещё — впустишь _всех._'],
@@ -209,6 +212,7 @@ function speaker(t, i0) {
 
 function decision(t, n, sub, A, B, i0, timerBeat, pick) {
   rect(0, 0, W, H, '#061014');
+  if (DEC_BG[n]) blurBg(() => DEC_BG[n](t));
   g.strokeStyle = 'rgba(47,212,200,.06)'; g.lineWidth = 2;
   for (let x = 0; x < W; x += 60) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
   for (let y = 0; y < H; y += 60) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
@@ -415,7 +419,137 @@ function tunnel(t, i0) {
   g.save(); g.globalAlpha = clamp(p); text('03:07', 540, 420, 130, C.w, { ui: true, glow: 20 }); g.restore();
 }
 
+
+// ---------- dynamic extras ----------
+const IMPACTS = [];
+function blurBg(fn) {
+  const prev = g; g = b2ctx; g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; fn(); g = prev;
+  g.save(); g.filter = 'blur(10px) brightness(0.42) saturate(1.2)'; g.drawImage(buf2, 0, 0); g.restore();
+}
+function dust(t, n, col, seed = 0, speed = 30) {
+  for (let i = 0; i < n; i++) {
+    const x = (rnd(i + seed) * W + Math.sin(t * 0.7 + i) * 30) % W;
+    const y = (rnd(i + seed + 50) * H - t * speed * (0.4 + rnd(i + seed + 9)) % H + H) % H;
+    circ(x, y, 1.5 + rnd(i + seed + 3) * 3, col);
+  }
+}
+function beacon(t, a = 1) {
+  const ang = t * 3.2;
+  g.save(); g.globalAlpha *= a; g.translate(540, 0);
+  for (const off of [0, Math.PI]) {
+    g.save(); g.rotate(Math.sin(ang + off) * 1.1);
+    const lg = g.createLinearGradient(0, 0, 0, 1700); lg.addColorStop(0, 'rgba(255,50,40,.55)'); lg.addColorStop(1, 'rgba(255,50,40,0)');
+    g.fillStyle = lg; g.beginPath(); g.moveTo(-20, 0); g.lineTo(20, 0); g.lineTo(420, 1700); g.lineTo(-420, 1700); g.fill();
+    g.restore();
+  }
+  circ(0, 40, 30, '#ff4a3a'); glow(0, 40, 200, 'rgba(255,60,40,.7)');
+  g.restore();
+}
+function speedLines(t, a = 1, col = 'rgba(200,250,255,.5)') {
+  g.save(); g.globalAlpha *= a; g.strokeStyle = col; g.lineWidth = 4;
+  for (let i = 0; i < 46; i++) {
+    const ang = rnd(i) * Math.PI * 2, ph = (t * 1.8 + rnd(i + 7)) % 1;
+    const r0 = lerp(250, 1300, ph), r1 = r0 + 120 + ph * 260;
+    g.beginPath(); g.moveTo(540 + Math.cos(ang) * r0, 860 + Math.sin(ang) * r0); g.lineTo(540 + Math.cos(ang) * r1, 860 + Math.sin(ang) * r1); g.stroke();
+  }
+  g.restore();
+}
+function cityShot(t) {
+  const sky = g.createLinearGradient(0, 0, 0, 1400); sky.addColorStop(0, '#05090c'); sky.addColorStop(1, '#3a1010');
+  g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  // smoke columns
+  for (let i = 0; i < 30; i++) { const x = rnd(i + 900) * W, ph = (t * 0.15 + rnd(i)) % 1; circ(x + ph * 120, lerp(1150, 300, ph), lerp(40, 190, ph), `rgba(20,16,18,${0.5 * (1 - ph)})`); }
+  // skyline layers (parallax)
+  [[0.25, '#0b1216', 760, 12], [0.6, '#0e171b', 900, 18], [1, '#0a0f12', 1040, 30]].forEach(([k, col, base, sp], L) => {
+    for (let i = -2; i < 12; i++) {
+      const bw = 140 + rnd(i + L * 40) * 80, x = ((i * 150 - t * sp) % (14 * 150) + 14 * 150) % (14 * 150) - 300;
+      const bh = 220 + rnd(i * 3 + L) * 420 * k + 120;
+      rect(x, base - bh, bw, bh + 600, col);
+      if (L === 2) for (let wy = base - bh + 30; wy < base; wy += 50) for (let wx = x + 18; wx < x + bw - 18; wx += 32)
+        if (rnd(wx * 3 + wy + i) > 0.7) rect(wx, wy, 14, 22, rnd(wx + wy) > 0.5 ? '#ff7a2a' : '#3a2a20');
+    }
+  });
+  // fires
+  for (let i = 0; i < 7; i++) {
+    const x = 80 + i * 150 + rnd(i) * 60, y = 1040 - rnd(i + 3) * 300, fl = 0.7 + 0.3 * Math.sin(t * 18 + i * 3) * Math.sin(t * 7 + i);
+    glow(x, y, 220 * fl, 'rgba(255,110,30,.55)');
+    g.fillStyle = '#ffb547'; g.beginPath(); g.moveTo(x - 30, y); g.quadraticCurveTo(x - 10, y - 90 * fl, x, y - 130 * fl); g.quadraticCurveTo(x + 15, y - 70 * fl, x + 30, y); g.fill();
+  }
+  rect(0, 1040, W, 900, '#07090b');
+  for (let i = 0; i < 22; i++) eyesZ(rnd(i + 70) * W, 1080 + rnd(i + 90) * 160, 7 + rnd(i) * 5, t, i);
+  dust(t, 60, 'rgba(255,170,90,.6)', 11, -60);
+}
+function eyesZ(x, y, s, t, seed) {
+  if (((t + rnd(seed) * 5) % 3.4) < 0.15) return;
+  glow(x - s, y, s * 3, 'rgba(255,215,60,.6)'); glow(x + s, y, s * 3, 'rgba(255,215,60,.6)');
+  circ(x - s, y, s * 0.6, '#ffe45a'); circ(x + s, y, s * 0.6, '#ffe45a');
+}
+function crowdShot(t) {
+  rect(0, 0, W, H, '#08161b');
+  for (let i = -1; i < 5; i++) { const ax = i * 300 + 150 - (t * 25) % 300; g.fillStyle = '#050e12'; g.beginPath(); g.moveTo(ax - 95, 900); g.lineTo(ax - 95, 470); g.arc(ax, 470, 95, Math.PI, 0); g.lineTo(ax + 95, 900); g.fill();
+    const fl = rnd(Math.floor(t * 8) + i) > 0.15 ? 1 : 0.2; glow(ax + 150, 380, 110, 'rgba(142,238,255,.35)', fl); circ(ax + 150, 380, 12, fl > .5 ? '#dffcff' : '#335'); }
+  rect(0, 880, W, 1100, '#0f2228'); rect(0, 880, W, 10, '#c9c3a6');
+  for (let row = 0; row < 6; row++) for (let i = 0; i < 18; i++) {
+    const sd = row * 100 + i, dir = rnd(sd + 5) > .5 ? 1 : -1;
+    const x = ((i * 70 + rnd(sd) * 60 + dir * t * (20 + rnd(sd + 2) * 40)) % 1260 + 1260) % 1260 - 90;
+    figure(x, 950 + row * 50, 0.8 + row * 0.16, sd, t + rnd(sd));
+  }
+}
+function leverShot(t, i0) {
+  rect(0, 0, W, H, '#0b171b');
+  g.save(); g.beginPath(); g.rect(0, 1250, W, 70); g.clip();
+  for (let i = -2; i < 30; i++) { g.fillStyle = i % 2 ? '#111' : C.a; g.beginPath(); g.moveTo(i * 70, 1320); g.lineTo(i * 70 + 70, 1250); g.lineTo(i * 70 + 140, 1250); g.lineTo(i * 70 + 70, 1320); g.fill(); }
+  g.restore();
+  text('ГЕРМОЗАТВОР', 540, 420, 70, '#2a4a52', { ui: true, ls: 10 });
+  rect(500, 760, 80, 520, '#04090b');
+  const p = eout(prog(t, T[i0], T[i0] + 0.7));
+  g.save(); g.translate(540, 760);
+  rect(-20, 0, 40, 420, '#9fb3b9');
+  circ(0, 0, 140, C.r); circ(-40, -40, 40, '#ff8a80');
+  glow(-40, -40, 160, 'rgba(255,255,255,.25)', 0.5 + 0.5 * Math.sin(t * 3));
+  g.restore();
+  hand(lerp(1300, 600, p), lerp(1500, 860, p), -0.6, 2.4, { grip: true });
+  dust(t, 30, 'rgba(160,230,240,.35)', 3, 20);
+}
+function runShot(t) {
+  rect(0, 0, W, H, '#071216');
+  g.fillStyle = '#0f2228'; g.beginPath(); g.moveTo(0, 0); g.lineTo(440, 700); g.lineTo(640, 700); g.lineTo(W, 0); g.fill();
+  g.fillStyle = '#132a31'; g.beginPath(); g.moveTo(0, H); g.lineTo(440, 900); g.lineTo(640, 900); g.lineTo(W, H); g.fill();
+  rect(440, 700, 200, 200, '#04090b'); glow(540, 800, 300, 'rgba(255,59,59,.3)');
+  for (let k = 0; k < 8; k++) { const ph = (t * 1.2 + k / 8) % 1, y = lerp(700, -400, ph * ph); glow(lerp(520, -200, ph), y, 60 + ph * 120, 'rgba(142,238,255,.35)'); glow(lerp(560, 1280, ph), y, 60 + ph * 120, 'rgba(142,238,255,.35)'); }
+  const list = [];
+  for (let i = 0; i < 34; i++) { const z = (t * 0.55 + rnd(i)) % 1; list.push([z, i]); }
+  list.sort((a, b) => a[0] - b[0]).forEach(([z, i]) => {
+    const s = lerp(0.4, 5.5, z * z), x = 540 + (rnd(i + 5) - .5) * lerp(140, 2400, z * z), y = lerp(880, 2600, z * z);
+    g.save(); g.globalAlpha = clamp((1 - z) * 6); figure(x, y, s, i, t * 1.4); g.restore();
+  });
+  speedLines(t, 0.5);
+}
+function zRush(t, i0) {
+  const t0 = T[i0], d = (T[i0 + 1] || END) - t0, k = prog(t, t0, t0 + d);
+  cam(0, 0, W, H, 'КАМ 2 · ТУРНИКЕТЫ', t, (w, h) => {
+    rect(0, 0, w, h, '#0c1a1d'); rect(0, 1100, w, 820, '#14262a');
+    for (let i = 0; i < 6; i++) { rect(40 + i * 180, 1000, 90, 160, '#2c4248'); rect(40 + i * 180, 1060, 90, 16, '#4a6268'); }
+    const list = [];
+    for (let i = 0; i < 16; i++) list.push([clamp(k * 1.25 - rnd(i) * 0.5), i]);
+    list.sort((a, b) => a[0] - b[0]).forEach(([z, i]) => {
+      const s = lerp(1.2, 7, z * z), x = 540 + (rnd(i + 5) - .5) * lerp(900, 2000, z), y = lerp(1180, 2700, z * z);
+      figure(x, y, s, i + 90, t * 1.5, true);
+    });
+  }, true);
+  if (k > 0.82) { const n = prog(k, 0.82, 1);
+    for (let i = 0; i < 260; i++) rect(rnd(i + Math.floor(t * 40)) * W, rnd(i * 3 + Math.floor(t * 40)) * H, 40 + rnd(i) * 160, 6, `rgba(220,240,240,${0.5 * n})`);
+    g.save(); g.globalAlpha = n; text('СИГНАЛ ПОТЕРЯН', 540, 860, 80, C.r, { ui: true, glow: 20 }); g.restore(); }
+  beacon(t, 0.5);
+}
+const DEC_BG = { 1: t => camWall(t, 14), 2: t => runShot(t), 3: t => tunnel(t, 31) };
+
 const SCN = {
+  CITY: t => cityShot(t),
+  CROWD: t => { crowdShot(t); beacon(t, 0.25); },
+  LEVER: (t, i) => leverShot(t, i),
+  RUN: t => runShot(t),
+  ZRUSH: (t, i) => zRush(t, i),
   A: (t, i) => { stationThroughGlass(t); desk(t, { alarm: t > T[0] }); alarmWash(t, 0.8);
     const p = eback(prog(t, T[3], T[3] + 0.5)); if (t > T[3] && t < T[5]) { g.save(); g.translate(540, 600); g.scale(p, p); g.globalAlpha = clamp(p) * (1 - prog(t, T[4] + 1.2, T[5])); text('90', 0, 0, 300, C.t, { ui: true, glow: 40 }); g.restore(); } },
   B: (t) => board(t, 'ЗАДЕРЖКА'),
@@ -465,50 +599,86 @@ function subtitle(t) {
   if (i < 0 || !BEATS[i][1]) return;
   let s = BEATS[i][1];
   const radio = s[0] === '#'; if (radio) s = s.slice(1);
-  const p = eout(prog(t, T[i], T[i] + 0.25));
-  const fs = radio ? 46 : 58;
+  const fs = radio ? 46 : 60;
   g.save();
   g.font = `${radio ? 700 : 900} ${fs}px ${radio ? '"JetBrains Mono"' : 'Inter'}`;
   const lines = wrap(s, 880);
   const lh = fs * 1.22, bh = lines.length * lh + 44;
-  const by = 1470 - bh + lerp(30, 0, p);
-  g.globalAlpha = p;
-  g.fillStyle = radio ? 'rgba(4,14,16,.9)' : 'rgba(3,9,11,.78)';
+  const by = 1470 - bh;
+  const pb = eout(prog(t, T[i], T[i] + 0.18));
+  g.globalAlpha = pb; g.fillStyle = radio ? 'rgba(4,14,16,.9)' : 'rgba(3,9,11,.8)';
   rr(70, by, 940, bh, 22); g.fill();
   if (radio) { g.strokeStyle = C.cy; g.lineWidth = 3; g.stroke(); }
-  g.textBaseline = 'middle'; g.textAlign = 'left';
+  g.textBaseline = 'middle'; g.textAlign = 'center';
+  let wi = 0;
+  const dur = (T[i + 1] || END) - T[i];
+  const nWords = s.split(' ').length, step = Math.min(0.16, dur * 0.55 / nWords);
   lines.forEach((ln, li) => {
-    const parts = ln.split(' ');
-    const clean = parts.map(w => w.replace(/[*_]/g, ''));
+    const parts = ln.split(' '), clean = parts.map(w => w.replace(/[*_]/g, ''));
     const sp = g.measureText(' ').width;
     const tot = clean.reduce((a, w) => a + g.measureText(w).width, 0) + sp * (parts.length - 1);
     let x = 540 - tot / 2; const y = by + 22 + lh * (li + 0.5);
     parts.forEach((w, k) => {
-      let col = radio ? C.cy : C.w;
-      if (w.includes('*')) col = C.t; if (w.includes('_')) col = C.r;
-      g.fillStyle = col; g.fillText(clean[k], x, y); x += g.measureText(clean[k]).width + sp;
+      const ww = g.measureText(clean[k]).width, tw = T[i] + 0.05 + (wi++) * step;
+      const p = prog(t, tw, tw + 0.2);
+      if (p > 0) {
+        let col = radio ? C.cy : C.w; const hot = w.includes('*') || w.includes('_');
+        if (w.includes('*')) col = C.t; if (w.includes('_')) col = C.r;
+        g.save(); g.translate(x + ww / 2, y + lerp(26, 0, eout(p))); const sc = hot ? lerp(1.6, 1, eback(p)) : lerp(0.6, 1, eback(p)); g.scale(sc, sc);
+        g.globalAlpha = clamp(p * 3);
+        if (hot) { g.shadowColor = col; g.shadowBlur = 18; }
+        g.fillStyle = col; g.fillText(clean[k], 0, 0); g.restore();
+      }
+      x += ww + sp;
     });
   });
   g.restore();
 }
 
+const runStart = []; BEATS.forEach((b, i) => runStart.push(i > 0 && BEATS[i - 1][0] === b[0] ? runStart[i - 1] : i));
+const IMP = [[T[3], 30], [T[9] + 0.3, 14], [T[9] + 0.45, 14], [T[13], 26], [T[18] + 0.3, 14], [T[18] + 0.45, 14], [T[22], 30],
+  [T[23] + 2.2, 40], [T[23] + 2.8, 30], [T[24] + 0.1, 30], [T[24] + 0.7, 26], [T[36], 30]];
+const ALARM = new Set(['A', 'C', 'ZRUSH', 'CROWD', 'LEVER']);
 function render(t) {
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
-  rect(0, 0, W, H, C.bg);
   let i = 0; for (let k = 0; k < BEATS.length; k++) if (t >= T[k]) i = k;
-  const key = BEATS[i][0];
+  const key = BEATS[i][0], rs = runStart[i];
+  let re = BEATS.length; for (let k = i + 1; k < BEATS.length; k++) if (runStart[k] !== rs) { re = k; break; }
+  const shotS = T[rs], shotE = T[re] || END;
+  // draw scene to buffer
+  g = bctx; g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.filter = 'none';
+  rect(0, 0, W, H, C.bg);
   g.save(); SCN[key](t, i); g.restore();
-  // flash on scene cut
-  const st = sceneStart[key], ft = t - st;
-  if (ft < 0.18 && key !== 'A') { g.save(); g.globalAlpha = (1 - ft / 0.18) * 0.5; rect(0, 0, W, H, '#dffcff'); g.restore(); }
-  // chromatic/vignette
+  if (ALARM.has(key)) beacon(t, key === 'A' ? 0.35 : 0.2);
+  // camera
+  g = main; g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
+  rect(0, 0, W, H, '#000');
+  const ct = t - shotS;
+  let z = 1.02 + 0.07 * ease(prog(t, shotS, shotE)) + 0.04 * Math.exp(-(t - T[i]) * 7);
+  if (ct < 0.32 && rs > 0) z *= lerp(1.22, 1, eout(ct / 0.32));
+  let amp = ALARM.has(key) ? 5 : 2.5;
+  if (key === 'I') amp += 14 * prog(t, T[33], T[36]);
+  if (key === 'RUN' || key === 'ZRUSH') amp += 6;
+  for (const [h, s] of IMP) if (t > h) amp += s * Math.exp(-(t - h) * 8);
+  const sx = amp * (Math.sin(t * 13.1) + Math.sin(t * 29.7 + 1.3)) / 2, sy = amp * (Math.sin(t * 11.3 + 2) + Math.sin(t * 23.9)) / 2;
+  const rot = amp * 0.0006 * Math.sin(t * 5.1);
+  g.save(); g.translate(540 + sx, 860 + sy); g.rotate(rot); g.scale(z, z); g.translate(-540, -860);
+  if (ct < 0.3 && rs > 0) {
+    const k = 1 - ct / 0.3;
+    for (let y = 0; y < H; y += 120) { const dx = (rnd(y + Math.floor(t * 60)) - .5) * 160 * k; g.drawImage(buf, 0, y, W, 120, dx, y, W, 120); }
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.35 * k;
+    g.drawImage(buf, 18 * k, 0); g.drawImage(buf, -18 * k, 0);
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  } else g.drawImage(buf, 0, 0);
+  g.restore();
+  if (ct < 0.12 && rs > 0) { g.save(); g.globalAlpha = (1 - ct / 0.12) * 0.55; rect(0, 0, W, H, '#dffcff'); g.restore(); }
+  // tunnel whiteout before decision 3
+  if (key === 'I' && t > shotE - 0.5) { g.save(); g.globalAlpha = prog(t, shotE - 0.5, shotE); rect(0, 0, W, H, '#f4fdff'); g.restore(); }
   const vg = g.createRadialGradient(540, 860, 300, 540, 860, 1200); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)');
   g.fillStyle = vg; g.fillRect(0, 0, W, H);
   const tg = g.createLinearGradient(0, 0, 0, 340); tg.addColorStop(0, 'rgba(3,8,10,.9)'); tg.addColorStop(1, 'rgba(3,8,10,0)');
   g.fillStyle = tg; g.fillRect(0, 0, W, 340);
   hud(t);
   subtitle(t);
-  // fade in / out
   if (t < 0.3) { g.save(); g.globalAlpha = 1 - t / 0.3; rect(0, 0, W, H, '#000'); g.restore(); }
 }
 window.render = render; window.END = END; window.T = T; window.BEATS = BEATS;

@@ -58,6 +58,13 @@ s=seg(T[32],END); n=s.stop-s.start; out[s]+=0.4*band(noise[s],25,200)*np.linspac
 for b in np.arange(T[32],END-0.5,0.85):
     for o in (0,0.13): clank(b+o,0.05+0.08*(b-T[32])/(END-T[32]))
 boom(T[33],0.6,40,2.5); boom(T[36],0.7,36,2)
+K=d['K']
+for i in range(1,len(K)):
+    if K[i]!=K[i-1]:
+        st=T[i]-0.18; sg=seg(st,st+0.45); n=sg.stop-sg.start
+        out[sg]+=0.35*band(noise[sg],400,6000)*np.sin(np.linspace(0,np.pi,n))**3
+for k in range(len(T)):
+    if K[k] not in ('D','F','J') : boom(T[k],0.12,70,12)
 out/=max(1,np.abs(out).max()/0.9)
 with wave.open('sfx.wav','wb') as f:
     f.setnchannels(1); f.setsampwidth(2); f.setframerate(SR); f.writeframes((out*32767).astype(np.int16).tobytes())
