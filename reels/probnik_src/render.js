@@ -1,5 +1,5 @@
 const { chromium } = require('playwright');
-const FPS = 30, END = 100.2, N = Math.ceil(END * FPS), P = 4;
+const FPS = 30, END = 99.77, N = Math.ceil(END * FPS), P = 4;
 (async () => {
   const b = await chromium.launch();
   await Promise.all([...Array(P).keys()].map(async w => {

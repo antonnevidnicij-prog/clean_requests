@@ -7,6 +7,7 @@
 <style>html,body{margin:0;background:#000}canvas{display:block}</style>
 </head><body>
 <canvas id="c" width="1080" height="1920"></canvas>
+<script src="vo_timeline.js" onerror="0"></script>
 <script>
 const W = 1080, H = 1920;
 const C = {
@@ -95,6 +96,7 @@ const BEATS = [
 ];
 const T = []; let acc = 0.3;
 BEATS.forEach(b => { T.push(acc); const s = b[1]; acc += b[2] || Math.max(1.7, s.replace(/[*_#]/g, '').length / 15 + 0.5); });
+if (window.VO_T) { T.length = 0; T.push(...window.VO_T); acc = window.VO_END; }
 const END = acc;
 const sceneStart = {}; BEATS.forEach((b, i) => { if (!(b[0] in sceneStart)) sceneStart[b[0]] = T[i]; });
 const ORDER = Object.keys(sceneStart);
@@ -380,7 +382,7 @@ function inventory(t, i0) {
 }
 function sealMap(t, i0) {
   rect(0, 0, W, H, '#061014');
-  const t0 = T[i0], d = BEATS[i0][2];
+  const t0 = T[i0], d = T[i0 + 1] - T[i0];
   text('СХЕМА · ГЕРМОКОНТУР', 540, 400, 34, C.mute, { mono: true, ls: 3 }); g.translate(0, 120);
   g.strokeStyle = C.t; g.lineWidth = 10; g.lineCap = 'round';
   g.beginPath(); g.moveTo(220, 820); g.lineTo(860, 820); g.stroke();
