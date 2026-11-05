@@ -966,7 +966,7 @@ function bigCard(t, t0, big, small, y = 640, col = C.t) {
   const p = popIn(t, t0, 0.4); if (p <= 0) return;
   g.save(); g.translate(540, y); g.scale(p, p);
   g.fillStyle = 'rgba(10,12,14,.88)'; rr(-400, -150, 800, 300, 26); g.fill(); g.strokeStyle = col; g.lineWidth = 5; g.stroke();
-  text(big, 0, -25, big.length > 6 ? 110 : 160, col, { ui: true, glow: 20 }); text(small, 0, 95, 28, C.cy, { mono: true });
+  text(big, 0, -25, big.length > 8 ? 88 : big.length > 6 ? 110 : 160, col, { ui: true, glow: 20 }); text(small, 0, 95, 28, C.cy, { mono: true });
   g.restore();
 }
 function aerial(t, v) {
@@ -1152,7 +1152,7 @@ const SCN_ALL = {
   AIR: t => { aerial(t, 'island'); titleOver(t, T[0], 'АЛЬКАТРАС', '«СКАЛА» · 1934–1963'); },
   MAP: t => mapPin(t, T[1], { x: 860, y: 900, name: 'АЛЬКАТРАС', sub: 'ВОДА +12° · СИЛЬНЫЕ ТЕЧЕНИЯ', coast: true, from: [590, 1050], dist: '~2 КМ' }),
   HIST: t => parchment(t, T[2], '1934', '— 1963 · ФЕДЕРАЛЬНАЯ ТЮРЬМА'),
-  CELL: t => { cellPlan(t, T[3], { w: 470, h: 850, wl: '1,5 М', hl: '2,7 М', items: [['КОЙКА', 20, 40, 160, 520, '#8a9096'], ['РАКОВИНА', 300, 60, 150, 90, '#c8ccd2'], ['ТУАЛЕТ', 320, 680, 130, 130, '#c8ccd2']] }); stamp(t, T[3] + 1.4, '336 КАМЕР', 540, 1320, C.t, 56); },
+  CELL: t => { cellPlan(t, T[3], { w: 470, h: 850, wl: '1,5 М', hl: '2,7 М', items: [['КОЙКА', 20, 40, 160, 520, '#8a9096'], ['РАКОВИНА', 300, 60, 150, 90, '#c8ccd2'], ['ТУАЛЕТ', 320, 680, 130, 130, '#c8ccd2']] }); stamp(t, T[3] + 1.4, '336 КАМЕР', 540, 860, C.t, 60); },
   DOS: t => dossier(t, T[4], 'АЛЬ КАПОНЕ', ['ГАНГСТЕР ИЗ ЧИКАГО', 'УКЛОНЕНИЕ ОТ НАЛОГОВ', 'АЛЬКАТРАС · 1934–1939'], 'ЗАКЛЮЧЁННЫЙ'),
   SHOWER: t => showerScene(t, T[5]),
   STAT: t => { rect(0, 0, W, H, '#0b0e11'); bars(t, 0.5); bigCard(t, T[6], '14', 'ПОПЫТОК ПОБЕГА · 36 ЧЕЛОВЕК', 600); stamp(t, T[6] + 1.6, 'ПОЙМАНЫ ИЛИ УБИТЫ', 540, 1000, C.r, 50); },
@@ -1162,7 +1162,7 @@ const SCN_ALL = {
  adx: {
   AIR: t => { aerial(t, 'desert'); titleOver(t, T[0], 'ADX FLORENCE', 'КОЛОРАДО · США'); if (t > T[1]) stamp(t, T[1] + 0.3, '«АЛЬКАТРАС СКАЛИСТЫХ ГОР»', 540, 760, C.a, 46); },
   STAT: t => { blurBg(() => aerial(t, 'desert')); bigCard(t, T[2], '0', 'ПОБЕГОВ С 1994 ГОДА', 700); },
-  CELL: t => { cellPlan(t, T[3], { w: 440, h: 780, wl: '~2 М', hl: '~3,5 М', window: true, items: [['КРОВАТЬ', 20, 40, 170, 420, '#9aa0a6'], ['СТОЛ', 250, 60, 170, 110, '#9aa0a6'], ['СТУЛ', 300, 200, 80, 80, '#9aa0a6'], ['ДУШ', 260, 560, 160, 90, '#8fdcff'], ['ТУАЛЕТ', 300, 680, 120, 80, '#c8ccd2']] }); if (t > T[4]) stamp(t, T[4] + 0.2, 'ВСЁ ИЗ БЕТОНА', 540, 1330, C.a, 52); },
+  CELL: t => { cellPlan(t, T[3], { w: 440, h: 780, wl: '~2 М', hl: '~3,5 М', window: true, items: [['КРОВАТЬ', 20, 40, 170, 420, '#9aa0a6'], ['СТОЛ', 250, 60, 170, 110, '#9aa0a6'], ['СТУЛ', 300, 200, 80, 80, '#9aa0a6'], ['ДУШ', 260, 560, 160, 90, '#8fdcff'], ['ТУАЛЕТ', 300, 680, 120, 80, '#c8ccd2']] }); if (t > T[4]) stamp(t, T[4] + 0.2, 'ВСЁ ИЗ БЕТОНА', 540, 860, C.a, 56); },
   CLOCK: t => clock23(t, T[5]),
   WIN: t => slitWindow(t, T[6]),
   DOOR: t => doorSlot(t, T[7]),
