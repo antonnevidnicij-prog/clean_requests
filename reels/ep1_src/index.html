@@ -1,0 +1,853 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="node_modules/@fontsource/oswald/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/oswald/500.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/700.css">
+<link rel="stylesheet" href="node_modules/@fontsource/jetbrains-mono/400.css">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head><body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="data.js"></script>
+<script>
+const W = 1080, H = 1920, END = 89.5;
+const C = {
+  bg: '#121418', wall: '#1b1e23', wall2: '#16181c', panel: '#23272e', line: '#353a42',
+  y: '#f2b632', r: '#e5372f', g: '#72c94b', w: '#f2f2f2', dim: '#4a4f57', gray: '#8a9099',
+  navy: '#22335c', navy2: '#1a2747', skin: '#e3a57a', skin2: '#c98a62', cap: '#c9262b',
+  zomb: '#7fbf4d', blue: '#4aa3e8', train: '#2f5d9c'
+};
+const main = document.getElementById('c').getContext('2d');
+const off = document.createElement('canvas'); off.width = W; off.height = H;
+const offc = off.getContext('2d');
+let g = main;
+
+// ---------- utils ----------
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const ease = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const eout = t => { t = clamp(t); return 1 - Math.pow(1 - t, 3); };
+const eback = t => { t = clamp(t); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const fmt = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+function rr(x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+function rect(x, y, w, h, col) { g.fillStyle = col; g.fillRect(x, y, w, h); }
+function circ(x, y, r, col) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = col; g.fill(); }
+function glow(x, y, r, col, a = 1) {
+  const gr = g.createRadialGradient(x, y, 0, x, y, r);
+  gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.save(); g.globalAlpha *= a; g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); g.restore();
+}
+function text(s, x, y, size, col, opt = {}) {
+  g.save();
+  g.font = `${opt.weight || 700} ${size}px ${opt.mono ? '"JetBrains Mono"' : 'Oswald'}`;
+  g.letterSpacing = (opt.ls || 0) + 'px';
+  g.textAlign = opt.align || 'center'; g.textBaseline = opt.base || 'middle';
+  g.fillStyle = col;
+  if (opt.glow) { g.shadowColor = col; g.shadowBlur = opt.glow; }
+  g.fillText(s, x, y);
+  g.restore();
+}
+
+// Plate: dark box with colored border and mono text, pops in at t0
+function plate(s, x, y, col, t, t0, opt = {}) {
+  const p = prog(t, t0, t0 + 0.28);
+  if (p <= 0) return;
+  let a = clamp(p * 2.5);
+  if (opt.out !== undefined) a *= 1 - prog(t, opt.out, opt.out + 0.25);
+  if (a <= 0) return;
+  const fs = opt.fs || 42;
+  g.save();
+  g.font = `700 ${fs}px "JetBrains Mono"`; g.letterSpacing = '3px';
+  const tw = g.measureText(s).width, pw = tw + fs * 1.1, ph = fs * 1.75;
+  g.translate(x, y); g.rotate((opt.rot || 0) * Math.PI / 180);
+  const sc = lerp(0.55, 1, eback(p)); g.scale(sc, sc);
+  g.globalAlpha *= a;
+  g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 24;
+  g.fillStyle = 'rgba(14,15,18,0.92)'; rr(-pw / 2, -ph / 2, pw, ph, 8); g.fill();
+  g.shadowBlur = 0; g.lineWidth = 4; g.strokeStyle = col; g.stroke();
+  g.fillStyle = col; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(s, 0, fs * 0.06);
+  g.restore();
+}
+
+// ---------- characters ----------
+function woman(x, y, s, t, opt = {}) {
+  g.save(); g.translate(x, y); g.scale(s, s);
+  const br = Math.sin(t * 2.2) * 0.008;
+  // shadow
+  g.globalAlpha *= 1; g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 0, 70, 12, 0, 0, Math.PI * 2); g.fill();
+  // legs / shoes
+  rect(-30, -125, 24, 118, '#151c2e'); rect(6, -125, 24, 118, '#151c2e');
+  g.fillStyle = '#0c0d10'; rr(-36, -14, 34, 14, 6); g.fill(); rr(2, -14, 34, 14, 6); g.fill();
+  g.save(); g.translate(0, -125); g.scale(1, 1 + br); g.translate(0, 125);
+  // skirt
+  g.fillStyle = '#18233f'; g.beginPath(); g.moveTo(-50, -175); g.lineTo(50, -175); g.lineTo(58, -110); g.lineTo(-58, -110); g.closePath(); g.fill();
+  // arms
+  const arm = opt.armUp || 0;
+  g.fillStyle = C.navy2; rr(-82, -262, 24, 120, 12); g.fill();
+  g.save(); g.translate(70, -255); g.rotate(-arm * 1.9); g.fillStyle = C.navy2; rr(-12, 0, 24, 120, 12); g.fill(); circ(0, 126, 13, C.skin); g.restore();
+  circ(-70, -136, 13, C.skin);
+  // jacket
+  g.fillStyle = C.navy; rr(-60, -268, 120, 108, 18); g.fill();
+  rect(-60, -180, 120, 12, '#121a30');
+  // lapels
+  g.fillStyle = '#2c4175'; g.beginPath(); g.moveTo(-26, -268); g.lineTo(0, -225); g.lineTo(26, -268); g.closePath(); g.fill();
+  g.fillStyle = '#f0f0f0'; g.beginPath(); g.moveTo(-12, -268); g.lineTo(0, -246); g.lineTo(12, -268); g.closePath(); g.fill();
+  for (const yy of [-235, -210]) { circ(-12, yy, 4, C.y); circ(12, yy, 4, C.y); }
+  // badge M
+  g.fillStyle = C.cap; rr(-48, -255, 22, 20, 4); g.fill(); text('M', -37, -244, 15, '#fff');
+  // epaulettes
+  rect(-62, -268, 26, 7, C.y); rect(36, -268, 26, 7, C.y);
+  g.restore();
+  // neck + head
+  rect(-11, -288, 22, 24, C.skin2);
+  // hair back + bun
+  circ(0, -318, 46, '#3a2418'); circ(-34, -296, 20, '#3a2418');
+  circ(0, -315, 40, C.skin);
+  // ears
+  circ(-40, -312, 8, C.skin2); circ(40, -312, 8, C.skin2);
+  // fringe
+  g.fillStyle = '#3a2418'; g.beginPath(); g.ellipse(-6, -342, 38, 16, -0.2, 0, Math.PI * 2); g.fill();
+  // face
+  const blink = ((t + (opt.ph || 0)) % 3.7) < 0.12;
+  if (blink) { rect(-20, -313, 12, 3, '#222'); rect(8, -313, 12, 3, '#222'); }
+  else { circ(-14, -312, 4.5, '#1d1d1d'); circ(14, -312, 4.5, '#1d1d1d'); }
+  rect(-22, -326, 14, 3, '#3a2418'); rect(8, -326, 14, 3, '#3a2418');
+  g.fillStyle = 'rgba(220,110,100,.35)'; circ(-22, -298, 7, 'rgba(220,110,100,.3)'); circ(22, -298, 7, 'rgba(220,110,100,.3)');
+  rect(-8, -292, 16, 3, opt.worried ? '#7a3b30' : '#8a4b3d');
+  // cap (red duty cap)
+  g.fillStyle = C.cap; g.beginPath(); g.ellipse(0, -356, 52, 17, 0, 0, Math.PI * 2); g.fill();
+  rect(-38, -356, 76, 14, '#a81e22');
+  g.fillStyle = '#111'; g.beginPath(); g.ellipse(4, -341, 44, 7, 0, 0, Math.PI); g.fill();
+  circ(0, -352, 6, C.y);
+  g.restore();
+}
+
+function person(x, y, s, seed, t, opt = {}) {
+  const cols = ['#6b4f8a', '#3f6e8c', '#8c5a3f', '#5d7a3f', '#8a3f4f', '#4f5a8a', '#7a7a7a', '#a0763a'];
+  const skins = ['#e3a57a', '#c98a62', '#f0c09a', '#a8704a'];
+  const z = opt.zombie;
+  const body = z ? '#5b5f55' : cols[Math.floor(rnd(seed) * cols.length)];
+  const sk = z ? C.zomb : skins[Math.floor(rnd(seed + 3) * skins.length)];
+  const run = opt.run ? Math.sin(t * 14 + seed * 7) : 0;
+  g.save(); g.translate(x, y); g.scale(s * (opt.flip ? -1 : 1), s);
+  // legs
+  g.fillStyle = '#1f2228';
+  g.save(); g.translate(-9, -70); g.rotate(run * 0.5); rr(-7, 0, 14, 70, 6); g.fill(); g.restore();
+  g.save(); g.translate(9, -70); g.rotate(-run * 0.5); rr(-7, 0, 14, 70, 6); g.fill(); g.restore();
+  // body
+  g.fillStyle = body; rr(-24, -150, 48, 86, 16); g.fill();
+  // arms
+  g.fillStyle = z ? sk : body;
+  if (z) { rr(0, -140, 64, 14, 7); g.fill(); rr(0, -118, 58, 14, 7); g.fill(); }
+  else { g.save(); g.translate(-22, -142); g.rotate(0.3 + run * 0.6); rr(-6, 0, 12, 60, 6); g.fill(); g.restore();
+         g.save(); g.translate(22, -142); g.rotate(-0.3 - run * 0.6); rr(-6, 0, 12, 60, 6); g.fill(); g.restore(); }
+  // head
+  circ(0, -176, 24, sk);
+  if (!z) { g.fillStyle = ['#2a1c14', '#111', '#5a3a20', '#c9a060'][Math.floor(rnd(seed + 9) * 4)]; g.beginPath(); g.arc(0, -180, 25, Math.PI, 0); g.fill(); }
+  if (z) { glow(-8, -178, 14, 'rgba(255,230,80,.9)'); glow(8, -178, 14, 'rgba(255,230,80,.9)'); circ(-8, -178, 4, '#ffe95a'); circ(8, -178, 4, '#ffe95a'); rect(-10, -164, 20, 4, '#2c3a22'); }
+  else { circ(-8, -178, 3, '#1a1a1a'); circ(8, -178, 3, '#1a1a1a'); }
+  g.restore();
+}
+
+function eyes(x, y, s, a, t, seed) {
+  const bl = ((t + rnd(seed) * 5) % 4.2) < 0.15;
+  if (bl || a <= 0) return;
+  g.save(); g.globalAlpha *= a;
+  glow(x - s, y, s * 2.2, 'rgba(255,215,60,.55)'); glow(x + s, y, s * 2.2, 'rgba(255,215,60,.55)');
+  g.fillStyle = '#ffd84a';
+  g.beginPath(); g.ellipse(x - s, y, s * 0.75, s * 0.42, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(x + s, y, s * 0.75, s * 0.42, 0, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+// ---------- backgrounds ----------
+function bgFill(col = C.bg) { rect(0, 0, W, H, col); }
+
+function city(t) {
+  const sky = g.createLinearGradient(0, 0, 0, 1100);
+  sky.addColorStop(0, '#0b0d12'); sky.addColorStop(1, '#2a1214');
+  g.fillStyle = sky; g.fillRect(0, 0, W, 1100);
+  for (let i = 0; i < 60; i++) circ(rnd(i) * W, rnd(i + 50) * 600, rnd(i + 9) * 2 + 0.5, 'rgba(255,255,255,.5)');
+  circ(820, 300, 50, '#e8e2c8'); glow(820, 300, 160, 'rgba(232,226,200,.25)');
+  // buildings
+  for (let i = 0; i < 9; i++) {
+    const bx = i * 125 - 20, bw = 110, bh = 300 + rnd(i * 3) * 380, by = 1000 - bh;
+    rect(bx, by, bw, bh + 100, i % 2 ? '#1e2128' : '#23262e');
+    for (let wy = by + 24; wy < 980; wy += 44) for (let wx = bx + 14; wx < bx + bw - 14; wx += 26) {
+      const id = i * 1000 + wy * 7 + wx;
+      const offAt = 0.2 + rnd(id) * 1.6;
+      if (rnd(id + 1) < 0.55 && t < offAt) rect(wx, wy, 14, 22, '#e8b84a');
+      else rect(wx, wy, 14, 22, '#14161b');
+    }
+  }
+  rect(0, 1000, W, 100, '#0d0e11');
+  glow(300, 1010, 260, 'rgba(229,55,47,.35)'); glow(800, 1020, 220, 'rgba(229,90,47,.3)');
+  for (let i = 0; i < 14; i++) eyes(40 + rnd(i + 70) * 1000, 1020 + rnd(i + 90) * 50, 7, clamp((t - rnd(i) * 1.2) * 3), t, i);
+}
+
+function stationWall(t, opt = {}) {
+  const wg = g.createLinearGradient(0, 200, 0, 900);
+  wg.addColorStop(0, '#20242b'); wg.addColorStop(1, '#171a1f');
+  g.fillStyle = wg; g.fillRect(0, 0, W, 1100);
+  // tile lines
+  g.strokeStyle = 'rgba(255,255,255,.03)'; g.lineWidth = 2;
+  for (let yy = 220; yy < 760; yy += 40) { g.beginPath(); g.moveTo(0, yy); g.lineTo(W, yy); g.stroke(); }
+  // arches
+  for (let i = -1; i < 5; i++) {
+    const ax = i * 280 + 140 + (opt.pan || 0);
+    g.fillStyle = '#0f1114'; g.beginPath(); g.moveTo(ax - 90, 760); g.lineTo(ax - 90, 430); g.arc(ax, 430, 90, Math.PI, 0); g.lineTo(ax + 90, 760); g.fill();
+    rect(ax + 110, 300, 60, 460, '#2b3038'); rect(ax + 110, 300, 10, 460, '#363c46');
+    glow(ax + 140, 280, 70, 'rgba(255,210,140,.35)'); circ(ax + 140, 282, 10, '#ffe2a8');
+  }
+  rect(0, 240, W, 40, '#262a31');
+  // station sign
+  if (!opt.nosign) { g.fillStyle = '#0d0f12'; rr(330, 312, 420, 70, 6); g.fill(); text('ГЛУБОКАЯ', 540, 348, 44, '#e8e8e8', { ls: 8 }); }
+  // track pit
+  rect(0, 760, W, 80, '#0b0c0e'); rect(0, 800, W, 6, '#3d4048'); rect(0, 822, W, 6, '#3d4048');
+  // platform
+  const pg = g.createLinearGradient(0, 840, 0, 1100);
+  pg.addColorStop(0, '#30343c'); pg.addColorStop(1, '#1d2025');
+  g.fillStyle = pg; g.fillRect(0, 840, W, 260);
+  rect(0, 840, W, 10, '#d8d2b8'); rect(0, 850, W, 4, '#9a8a5a');
+}
+
+function trainCars(xoff) {
+  for (let c = 0; c < 3; c++) {
+    const x = xoff + c * 820;
+    g.fillStyle = C.train; rr(x, 470, 800, 300, 26); g.fill();
+    rect(x, 700, 800, 18, '#1f3f6c'); rect(x, 560, 800, 8, '#d8d8d8');
+    for (let wi = 0; wi < 5; wi++) { g.fillStyle = '#f7e6b0'; rr(x + 40 + wi * 150, 500, 110, 56, 8); g.fill(); }
+    rect(x + 360, 590, 80, 160, '#244a7d');
+  }
+  // tail lights at right end of last car
+  const tx = xoff + 3 * 820 - 20;
+  glow(tx - 10, 690, 70, 'rgba(255,40,30,.8)'); circ(tx - 10, 690, 12, '#ff3a2a');
+}
+
+function escalator(t, opt = {}) {
+  bgFill('#101215');
+  g.save();
+  g.translate(540, 560); g.rotate(-0.5);
+  rect(-900, -170, 1800, 340, '#1a1d22');
+  rect(-900, -120, 1800, 240, '#22262c');
+  // steps
+  for (let i = -40; i < 40; i++) {
+    const sx = ((i * 46 + (t * (opt.speed || 60)) % 46));
+    rect(sx, -110, 4, 220, '#2d3239');
+  }
+  // balustrades with lamps
+  rect(-900, -130, 1800, 14, '#3a3f47'); rect(-900, 116, 1800, 14, '#3a3f47');
+  for (let i = -6; i < 7; i++) {
+    const lx = i * 170;
+    rect(lx - 5, -170, 10, 40, '#555b65'); glow(lx, -178, 50, 'rgba(255,214,150,.5)'); circ(lx, -178, 14, '#ffe0a6');
+    rect(lx - 5, 130, 10, 40, '#555b65'); glow(lx, 178, 50, 'rgba(255,214,150,.5)'); circ(lx, 178, 14, '#ffe0a6');
+  }
+  if (opt.crowd) opt.crowd();
+  g.restore();
+}
+
+// ---------- scenes ----------
+const scenes = [];
+function S(s, e, draw) { scenes.push({ s, e, draw }); }
+
+// 1a: city + title
+S(0, 1.5, (t, lt) => {
+  city(t);
+  const p = eback(prog(t, 0.05, 0.4));
+  g.save(); g.globalAlpha = clamp(p);
+  text('ГЕРМОЗАТВОР', 540, 300, 30, C.gray, { mono: true, ls: 10 });
+  g.translate(540, 390); g.scale(lerp(1.4, 1, p), lerp(1.4, 1, p));
+  text('ДЕНЬ 1', 0, 0, 150, C.r, { glow: 30 });
+  g.restore();
+});
+// 1b/1c: dive through ground to station
+S(1.5, 8.0, (t, lt) => {
+  const cam = ease(prog(t, 1.6, 5.6)) * 1900;
+  g.save(); g.translate(0, -cam);
+  city(10);
+  // surface
+  rect(0, 1000, W, 40, '#2c2f36');
+  // metro pavilion
+  rect(380, 860, 320, 140, '#2a2e36'); rect(380, 850, 320, 16, '#3b404a');
+  circ(540, 800, 44, C.cap); text('M', 540, 802, 56, '#fff');
+  // soil layers
+  const cols = ['#3a2c22', '#33271f', '#2c231d', '#262019', '#211c17', '#1b1714'];
+  for (let i = 0; i < 6; i++) rect(0, 1040 + i * 330, W, 330, cols[i]);
+  for (let i = 0; i < 80; i++) circ(rnd(i + 300) * W, 1060 + rnd(i + 400) * 1900, 4 + rnd(i + 500) * 10, 'rgba(0,0,0,.25)');
+  // escalator shaft
+  g.save(); g.strokeStyle = '#4a4f58'; g.lineWidth = 70; g.beginPath(); g.moveTo(540, 1000); g.lineTo(300, 2600); g.stroke();
+  g.strokeStyle = '#1a1c20'; g.lineWidth = 50; g.stroke();
+  for (let i = 0; i < 12; i++) { const k = i / 12; glow(lerp(540, 300, k), lerp(1000, 2600, k), 30, 'rgba(255,210,140,.5)'); }
+  g.restore();
+  // station hall
+  g.fillStyle = '#15171b'; rr(120, 2560, 840, 340, 160); g.fill();
+  g.fillStyle = '#23272e'; rr(150, 2590, 780, 280, 140); g.fill();
+  for (let i = 0; i < 5; i++) { const lx = 250 + i * 145; glow(lx, 2650, 60, 'rgba(255,210,140,.5)'); circ(lx, 2650, 9, '#ffe2a8'); }
+  rect(150, 2800, 780, 20, '#d8d2b8');
+  g.restore();
+  // depth ruler
+  const ra = clamp(prog(t, 2.0, 2.6));
+  g.save(); g.globalAlpha = ra;
+  rect(60, 250, 6, 820, '#5b616b');
+  const depth = clamp(cam / 1900) * 84;
+  for (let m = 0; m <= 84; m += 12) { const yy = 250 + m / 84 * 820; rect(60, yy, 28, 4, '#8a9099'); text(m + ' м', 100, yy, 26, C.gray, { mono: true, align: 'left' }); }
+  const my = 250 + depth / 84 * 820;
+  g.fillStyle = C.y; g.beginPath(); g.moveTo(70, my); g.lineTo(96, my - 14); g.lineTo(96, my + 14); g.fill();
+  g.restore();
+  plate('84 М ПОД ЗЕМЛЁЙ', 600, 360, C.y, t, 5.85, { rot: -2 });
+});
+// 1d: hermetic door
+S(8.0, 11.2, (t, lt) => {
+  bgFill('#121418');
+  const z = lerp(1, 1.06, prog(t, 8, 11.2));
+  g.save(); g.translate(540, 600); g.scale(z, z); g.translate(-540, -600);
+  rect(80, 180, 920, 880, '#2a2d33'); rect(80, 180, 920, 24, '#3a3e46');
+  // slab
+  const sg = g.createLinearGradient(160, 0, 920, 0);
+  sg.addColorStop(0, '#5a606a'); sg.addColorStop(.5, '#6f7680'); sg.addColorStop(1, '#4e535c');
+  g.fillStyle = sg; g.fillRect(160, 250, 760, 760);
+  for (let i = 0; i < 8; i++) for (const yy of [280, 980]) circ(200 + i * 98, yy, 9, '#3d424a');
+  // hazard stripes
+  g.save(); rr(160, 900, 760, 60, 0); g.clip();
+  for (let i = -2; i < 22; i++) { g.fillStyle = i % 2 ? '#111' : C.y; g.beginPath(); g.moveTo(160 + i * 50, 960); g.lineTo(210 + i * 50, 900); g.lineTo(260 + i * 50, 900); g.lineTo(210 + i * 50, 960); g.fill(); }
+  g.restore();
+  // wheel
+  g.save(); g.translate(540, 600); g.rotate(t * 0.2);
+  g.strokeStyle = '#2f333a'; g.lineWidth = 22; g.beginPath(); g.arc(0, 0, 120, 0, Math.PI * 2); g.stroke();
+  for (let k = 0; k < 4; k++) { g.rotate(Math.PI / 4); rect(-130, -9, 260, 18, '#2f333a'); }
+  circ(0, 0, 30, '#25282e');
+  g.restore();
+  g.restore();
+  plate('ГЕРМОЗАТВОР 40 Т', 540, 320, C.y, t, 8.05, { rot: -2 });
+  plate('СВОЙ ВОЗДУХ', 700, 850, C.g, t, 10.0, { rot: 2 });
+});
+// 1e: red tunnel with eyes
+S(11.2, 14.8, (t, lt) => {
+  bgFill('#1e0b0c');
+  g.save(); g.translate(540, 600);
+  for (let i = 8; i > 0; i--) { g.fillStyle = `rgb(${18 + i * 5},${8 + i * 2},${9 + i * 2})`; g.beginPath(); g.arc(0, 0, i * 70, 0, Math.PI * 2); g.fill(); }
+  g.restore();
+  g.strokeStyle = '#3a2020'; g.lineWidth = 8;
+  g.beginPath(); g.moveTo(500, 620); g.lineTo(260, 1100); g.moveTo(580, 620); g.lineTo(820, 1100); g.stroke();
+  for (let i = 0; i < 26; i++) eyes(rnd(i + 11) * W, 200 + rnd(i + 22) * 900, 6 + rnd(i) * 6, clamp((t - 11.3 - rnd(i + 5) * 2) * 2), t, i);
+  eyes(540, 590, 22, clamp((t - 13.3) * 3), t + 0.3, 99);
+  plate('ОДНА РОКОВАЯ ОШИБКА', 540, 870, C.r, t, 12.4, { rot: -3 });
+});
+// 2a: ID + platform
+S(14.8, 18.7, (t, lt) => {
+  stationWall(t);
+  woman(330, 1010, 1.25, t);
+  // ID card
+  const p = eout(prog(t, 14.9, 15.4));
+  g.save(); g.translate(lerp(-700, 0, p), 0);
+  g.fillStyle = '#e9e4d6'; rr(130, 170, 820, 210, 14); g.fill();
+  rect(130, 170, 820, 46, C.cap); text('МЕТРОПОЛИТЕН · УДОСТОВЕРЕНИЕ', 160, 194, 24, '#fff', { mono: true, align: 'left', ls: 2 });
+  g.fillStyle = '#c9c2b0'; rr(160, 232, 120, 130, 8); g.fill();
+  g.save(); g.beginPath(); g.rect(160, 232, 120, 130); g.clip(); woman(220, 520, 0.6, t); g.restore();
+  text('ДОЛЖНОСТЬ / 046', 310, 250, 20, '#6a6458', { mono: true, align: 'left' });
+  text('Н. ОРЛОВА', 310, 300, 64, '#15171b', { align: 'left' });
+  text('46 ЛЕТ · ДЕЖУРНАЯ ПО СТАНЦИИ', 310, 350, 22, '#4a4538', { mono: true, align: 'left' });
+  g.restore();
+});
+// 2b: train leaving
+S(18.7, 22.2, (t, lt) => {
+  stationWall(t);
+  trainCars(lerp(-100, -2700, ease(prog(t, 18.8, 22.1))));
+  // re-draw platform on top
+  const pg = g.createLinearGradient(0, 840, 0, 1100); pg.addColorStop(0, '#30343c'); pg.addColorStop(1, '#1d2025');
+  g.fillStyle = pg; g.fillRect(0, 840, W, 260); rect(0, 840, W, 10, '#d8d2b8');
+  woman(760, 1010, 1.1, t, { flip: true });
+  plate('20 ЛЕТ', 300, 230, C.y, t, 18.75, { rot: -2 });
+  plate('ПОСЛЕДНИЙ ПОЕЗД', 560, 330, C.w, t, 20.9, { rot: 1 });
+});
+// 2c: escalator
+S(22.2, 24.7, (t, lt) => {
+  escalator(t);
+  woman(220, 1040, 1.0, t);
+});
+// 2d: closing doors
+S(24.7, 26.95, (t, lt) => {
+  bgFill('#17191d');
+  rect(0, 880, W, 220, '#23262c');
+  for (let i = 0; i < 3; i++) {
+    const dx = 120 + i * 300;
+    rect(dx, 330, 230, 550, '#3a3f47'); rect(dx + 12, 342, 206, 538, '#4a505a');
+    rect(dx + 180, 600, 18, 60, '#2b2f35');
+    const lockT = 25.0 + i * 0.5;
+    circ(dx + 189, 580, 9, t > lockT ? C.r : C.g); glow(dx + 189, 580, 30, t > lockT ? 'rgba(229,55,47,.6)' : 'rgba(114,201,75,.6)');
+    text('ВЫХОД ' + (i + 1), dx + 115, 380, 26, '#c8ccd2', { mono: true });
+  }
+  woman(lerp(820, 940, prog(t, 24.7, 26.9)), 1030, 1.0, t);
+  plate('ЭЛЕКТРОННЫЕ ЗАМКИ', 540, 230, C.y, t, 24.85, { rot: -2 });
+});
+// 3a: board
+function boardScene(t, late, red) {
+  bgFill(red ? '#1c0c0d' : '#14161a');
+  // tunnel mouth
+  g.fillStyle = '#07080a'; g.beginPath(); g.moveTo(240, 1100); g.lineTo(240, 760); g.arc(540, 760, 300, Math.PI, 0); g.lineTo(840, 1100); g.fill();
+  g.strokeStyle = '#2a2d33'; g.lineWidth = 7; g.beginPath(); g.moveTo(500, 760); g.lineTo(380, 1100); g.moveTo(580, 760); g.lineTo(700, 1100); g.stroke();
+  // board
+  g.fillStyle = '#060607'; rr(110, 190, 860, 330, 14); g.fill(); g.strokeStyle = '#3a3e46'; g.lineWidth = 6; g.stroke();
+  for (let yy = 205; yy < 510; yy += 8) rect(126, yy, 828, 1, 'rgba(255,255,255,.025)');
+  text('ПОСЛЕДНИЙ ПОЕЗД', 150, 255, 40, '#ff9a2a', { mono: true, align: 'left', glow: 14 });
+  text('ПРИБЫТИЕ', 150, 335, 40, '#ff9a2a', { mono: true, align: 'left', glow: 14 });
+  text('00:12', 930, 335, 56, '#ff9a2a', { mono: true, align: 'right', glow: 14 });
+  const blink = Math.floor(t * 2.5) % 2 === 0;
+  if (late === 0) text('ПО РАСПИСАНИЮ', 150, 440, 44, C.g, { mono: true, align: 'left', glow: 14 });
+  else if (blink) text(late === 1 ? 'ОПАЗДЫВАЕТ' : 'ОЖИДАЕТСЯ...', 150, 440, 52, C.r, { mono: true, align: 'left', glow: 18 });
+}
+S(26.95, 31.6, (t, lt) => {
+  boardScene(t, t > 30.72 ? 1 : 0, false);
+  woman(860, 1030, 0.95, t, { flip: true, worried: t > 30.7 });
+});
+// 3b: siren
+S(31.6, 33.65, (t, lt) => {
+  boardScene(t, 1, true);
+  woman(860, 1030, 0.95, t, { worried: true });
+  const on = t > 32.45;
+  if (on) {
+    const pulse = (Math.sin((t - 32.45) * 9) + 1) / 2;
+    g.save(); g.globalAlpha = 0.18 + pulse * 0.25; rect(0, 0, W, 1100, '#e5372f'); g.restore();
+    circ(540, 150, 36, '#ff4a3a'); glow(540, 150, 260 * (0.6 + pulse * 0.6), 'rgba(255,60,40,.7)');
+  }
+  plate('ТРЕВОГА', 540, 620, C.r, t, 32.5, { rot: -3, fs: 56 });
+});
+// 4a: loudspeaker + order
+S(33.65, 37.1, (t, lt) => {
+  bgFill('#16181c');
+  const pulse = (Math.sin(t * 9) + 1) / 2;
+  g.save(); g.globalAlpha = 0.08 + pulse * 0.1; rect(0, 0, W, 1100, '#e5372f'); g.restore();
+  // speaker
+  g.save(); g.translate(170, 300);
+  g.fillStyle = '#3a3e46'; g.beginPath(); g.moveTo(0, -30); g.lineTo(110, -80); g.lineTo(110, 80); g.lineTo(0, 30); g.fill();
+  rect(-30, -34, 34, 68, '#2a2d33');
+  for (let k = 0; k < 3; k++) { const ph = (t * 1.6 + k / 3) % 1; g.strokeStyle = `rgba(242,182,50,${1 - ph})`; g.lineWidth = 6; g.beginPath(); g.arc(110, 0, 40 + ph * 120, -0.7, 0.7); g.stroke(); }
+  g.restore();
+  // message panel
+  const p = eback(prog(t, 33.7, 34.0));
+  g.save(); g.translate(560, 400); g.scale(p, p);
+  g.fillStyle = '#e9e4d6'; rr(-260, -200, 590, 400, 14); g.fill();
+  rect(-260, -200, 590, 50, '#2a2d33');
+  text('ДИСПЕТЧЕР → ВСЕМ СТАНЦИЯМ', -235, -175, 22, '#d0d0d0', { mono: true, align: 'left' });
+  circ(300, -175, 9, Math.floor(t * 3) % 2 ? C.r : '#5a1a18');
+  if (t > 33.68) text('ВСЕМ СТАНЦИЯМ.', -230, -100, 40, '#2a2d33', { align: 'left' });
+  if (t > 34.72) text('ЗАКРЫТЬ', -230, -20, 74, C.r, { align: 'left' });
+  if (t > 35.2) text('ГЕРМОЗАТВОРЫ.', -230, 60, 74, C.r, { align: 'left' });
+  if (t > 36.08) text('НЕМЕДЛЕННО.', -230, 140, 58, '#15171b', { align: 'left' });
+  g.restore();
+  woman(250, 1040, 1.05, t, { worried: true });
+});
+// 4b: CCTV monitor
+function monitor(t, label, inner) {
+  bgFill('#121418');
+  g.fillStyle = '#2a2d33'; rr(70, 200, 940, 740, 26); g.fill();
+  g.fillStyle = '#0c0e10'; rr(100, 230, 880, 620, 12); g.fill();
+  g.save(); g.beginPath(); g.roundRect(100, 230, 880, 620, 12); g.clip();
+  g.translate(100, 230);
+  inner();
+  // scanlines + noise
+  for (let yy = 0; yy < 620; yy += 6) rect(0, yy, 880, 2, 'rgba(0,0,0,.25)');
+  for (let i = 0; i < 40; i++) rect(rnd(i + Math.floor(t * 30)) * 880, rnd(i * 3 + Math.floor(t * 30)) * 620, 30, 2, 'rgba(255,255,255,.06)');
+  g.fillStyle = 'rgba(80,140,160,.08)'; g.fillRect(0, 0, 880, 620);
+  g.restore();
+  text(label, 130, 265, 24, '#d8dde3', { mono: true, align: 'left' });
+  if (Math.floor(t * 2) % 2) { circ(880, 265, 9, C.r); }
+  text('REC', 940, 265, 22, C.r, { mono: true, align: 'right' });
+  text('00:14:' + String(Math.floor((t * 10) % 60)).padStart(2, '0'), 950, 825, 24, '#d8dde3', { mono: true, align: 'right' });
+  text('МОНИТОР 02 · ВИДЕОНАБЛЮДЕНИЕ', 100, 975, 22, '#5b616b', { mono: true, align: 'left' });
+}
+S(37.1, 39.45, (t, lt) => {
+  monitor(t, 'КАМ 1 · ВЕСТИБЮЛЬ', () => {
+    rect(0, 0, 880, 620, '#1b2024'); rect(0, 430, 880, 190, '#262c31');
+    for (let i = 0; i < 6; i++) { rect(60 + i * 140, 360, 90, 90, '#3a4148'); rect(60 + i * 140, 395, 90, 10, '#5a646e'); }
+    for (let i = 0; i < 18; i++) {
+      const x = ((t * (260 + rnd(i) * 140) + rnd(i + 7) * 1400) % 1300) - 200;
+      person(x, 520 + rnd(i + 3) * 70, 0.7 + rnd(i + 1) * 0.2, i, t, { run: true });
+    }
+  });
+});
+S(39.45, 43.1, (t, lt) => {
+  monitor(t, 'КАМ 3 · ЭСКАЛАТОР', () => {
+    rect(0, 0, 880, 620, '#14181c');
+    g.save(); g.translate(440, 310); g.rotate(0.5);
+    rect(-800, -120, 1600, 240, '#22282e'); rect(-800, -130, 1600, 12, '#3a4148'); rect(-800, 118, 1600, 12, '#3a4148');
+    for (let i = 0; i < 16; i++) {
+      const x = ((t * 230 + rnd(i) * 1400) % 1400) - 700;
+      person(x, 60 - rnd(i + 2) * 90, 0.55, i + 40, t, { run: true });
+    }
+    const zt = t - 41.4;
+    if (zt > 0) for (let i = 0; i < 10; i++) {
+      const x = -720 + zt * 260 - rnd(i + 70) * 260;
+      person(x, 60 - rnd(i + 80) * 90, 0.58, i + 90, t, { zombie: true, run: true });
+    }
+    g.restore();
+  });
+  plate('ГОРОД ПАДАЕТ', 540, 930, C.r, t, 42.3, { rot: -2 });
+});
+// 5a: lever
+S(43.1, 44.8, (t, lt) => {
+  bgFill('#1a1d22');
+  rect(0, 160, W, 940, '#262a30');
+  g.save(); rr(0, 960, W, 50, 0); g.clip();
+  for (let i = -2; i < 30; i++) { g.fillStyle = i % 2 ? '#111' : C.y; g.beginPath(); g.moveTo(i * 50, 1010); g.lineTo(i * 50 + 50, 960); g.lineTo(i * 50 + 100, 960); g.lineTo(i * 50 + 50, 1010); g.fill(); }
+  g.restore();
+  g.fillStyle = '#e9e4d6'; rr(300, 200, 480, 70, 6); g.fill(); text('ГЕРМОЗАТВОР · ЗАКРЫТИЕ', 540, 236, 28, '#15171b', { mono: true });
+  const sh = Math.sin(t * 40) * 2;
+  rect(510, 330, 60, 520, '#0d0e10');
+  g.save(); g.translate(540 + sh, 380);
+  rect(-14, 0, 28, 300, '#8a9099');
+  circ(0, 0, 60, C.r); circ(-16, -16, 16, '#ff6a5a');
+  // hand
+  g.fillStyle = C.navy2; g.save(); g.rotate(0.6); rr(30, -20, 360, 110, 30); g.fill(); g.restore();
+  g.fillStyle = C.skin; rr(-50, -40, 110, 90, 34); g.fill();
+  for (let k = 0; k < 4; k++) { g.fillStyle = C.skin2; rr(-46 + k * 26, -48, 22, 40, 10); g.fill(); }
+  g.restore();
+});
+// 5b-d: gate front view
+function gateScene(t, doorP, crowd, shake) {
+  bgFill('#16181c');
+  g.save(); if (shake) g.translate(shake * (rnd(Math.floor(t * 60)) - .5) * 2, shake * (rnd(Math.floor(t * 60) + 1) - .5) * 2);
+  rect(0, 140, W, 960, '#22252b');
+  const ox = 150, oy = 230, ow = 780, oh = 720;
+  // outside corridor
+  g.save(); g.beginPath(); g.rect(ox, oy, ow, oh); g.clip();
+  const cg = g.createLinearGradient(0, oy, 0, oy + oh); cg.addColorStop(0, '#2b2f36'); cg.addColorStop(1, '#3a3f47');
+  g.fillStyle = cg; g.fillRect(ox, oy, ow, oh);
+  g.fillStyle = '#1c1f24'; g.beginPath(); g.moveTo(ox, oy); g.lineTo(540 - 90, 520); g.lineTo(540 + 90, 520); g.lineTo(ox + ow, oy); g.fill();
+  rect(450, 520, 180, 120, '#101215');
+  glow(540, 580, 200, 'rgba(229,55,47,.25)');
+  if (crowd) crowd('back');
+  g.restore();
+  // slab
+  const by = lerp(oy, oy + oh, doorP);
+  if (doorP > 0) {
+    const sg = g.createLinearGradient(ox, 0, ox + ow, 0); sg.addColorStop(0, '#5a606a'); sg.addColorStop(.5, '#6f7680'); sg.addColorStop(1, '#4e535c');
+    g.fillStyle = sg; g.fillRect(ox, oy, ow, by - oy);
+    for (let i = 0; i < 8; i++) circ(ox + 40 + i * 100, by - 90, 8, '#3d424a');
+    g.save(); g.beginPath(); g.rect(ox, by - 50, ow, 50); g.clip();
+    for (let i = -2; i < 20; i++) { g.fillStyle = i % 2 ? '#111' : C.y; g.beginPath(); g.moveTo(ox + i * 50, by); g.lineTo(ox + i * 50 + 50, by - 50); g.lineTo(ox + i * 50 + 100, by - 50); g.lineTo(ox + i * 50 + 50, by); g.fill(); }
+    g.restore();
+  }
+  // frame
+  g.strokeStyle = '#3a3e46'; g.lineWidth = 40; g.strokeRect(ox - 20, oy - 20, ow + 40, oh + 40);
+  rect(0, 970, W, 130, '#2a2e35');
+  if (crowd) crowd('front');
+  g.restore();
+  return by;
+}
+// runners through the gate (deterministic)
+function runners(t, phase, stopAt, gateBottom) {
+  const N = 40;
+  for (let i = 0; i < N; i++) {
+    const t0 = 44.5 + i * 0.12 + rnd(i) * 0.1;
+    const z = (t - t0) / 1.2; // 0..1 far->gate, >1 past
+    if (z < 0 || z > 1.4) continue;
+    if (t0 > stopAt) continue;
+    const x = 540 + (rnd(i + 5) - .5) * lerp(160, 900, clamp(z));
+    const y = lerp(600, 1080, clamp(z)) + (z > 1 ? (z - 1) * 600 : 0);
+    const s = lerp(0.35, 1.5, clamp(z)) + (z > 1 ? (z - 1) * 2 : 0);
+    if (phase === 'back' && z < 0.85) person(x, y, s, i, t, { run: true });
+    if (phase === 'front' && z >= 0.85) person(x, y, s, i, t, { run: true });
+  }
+}
+S(44.8, 47.6, (t, lt) => {
+  gateScene(t, 0, ph => runners(t, ph, 99, 950));
+  plate('ЗАТВОР ОТКРЫТ', 540, 190, C.y, t, 44.9, { rot: -1 });
+});
+S(47.6, 50.72, (t, lt) => {
+  const dp = ease(prog(t, 47.7, 50.6));
+  gateScene(t, dp, ph => {
+    runners(t, ph, 48.6, 950);
+    if (ph === 'back') {
+      for (let i = 0; i < 30; i++) {
+        const z = clamp((t - 48.3) / 2.6 * (0.5 + rnd(i + 11) * 0.5));
+        person(540 + (rnd(i + 21) - .5) * lerp(200, 760, z), lerp(620, 900, z), lerp(0.35, 1.05, z), i + 200, t, { run: true });
+      }
+      for (let i = 0; i < 8; i++) {
+        const z = clamp((t - 49.2) / 2.2);
+        person(540 + (rnd(i + 31) - .5) * 300, lerp(600, 760, z), lerp(0.3, 0.6, z), i + 300, t, { zombie: true, run: true });
+      }
+    }
+  }, 4 * dp);
+  plate('ЗАКРЫТИЕ', 540, 190, C.r, t, 47.7, { rot: -1 });
+  plate('СНАРУЖИ: 30 ЧЕЛ.', 540, 1060, C.r, t, 49.7, { rot: 2 });
+});
+const HITS = [50.75, 51.1, 51.55, 52.25, 52.7, 53.2];
+S(50.72, 55.4, (t, lt) => {
+  let sh = 0; for (const h of HITS) if (t > h) sh += 22 * Math.exp(-(t - h) * 9);
+  gateScene(t, 1, null, sh);
+  // dents
+  for (let i = 0; i < HITS.length; i++) if (t > HITS[i]) {
+    const x = 260 + rnd(i + 600) * 560, y = 360 + rnd(i + 700) * 420;
+    glow(x, y, 70, 'rgba(0,0,0,.45)'); circ(x, y, 26, 'rgba(255,255,255,.08)');
+    const fl = Math.exp(-(t - HITS[i]) * 8); if (fl > 0.05) glow(x, y, 160, `rgba(255,200,120,${fl * 0.6})`);
+  }
+  plate('40 Т · ДЕРЖИТ', 540, 1060, C.g, t, 53.4, { rot: -2 });
+});
+S(55.4, 57.6, (t, lt) => {
+  gateScene(t, 1, null, 0);
+  for (let i = 0; i < HITS.length; i++) { const x = 260 + rnd(i + 600) * 560, y = 360 + rnd(i + 700) * 420; glow(x, y, 70, 'rgba(0,0,0,.45)'); }
+  g.save(); g.globalAlpha = 0.5; rect(0, 0, W, 1100, '#101114'); g.restore();
+  for (let i = 0; i < 40; i++) circ(rnd(i) * W, (rnd(i + 3) * 900 + (t - 55.4) * 40 * (0.5 + rnd(i + 8))) % 1000 + 100, 2 + rnd(i + 1) * 2, 'rgba(200,200,200,.25)');
+});
+// 6: office / plan
+function office(t, opt = {}) {
+  bgFill('#121418');
+  rect(0, 0, W, 1100, '#191c21');
+  rect(0, 920, W, 180, '#22252b');
+  // desk + lamp
+  rect(560, 760, 420, 26, '#3a2c22'); rect(600, 786, 20, 170, '#2a201a'); rect(920, 786, 20, 170, '#2a201a');
+  g.fillStyle = '#2a2d33'; g.beginPath(); g.moveTo(820, 560); g.lineTo(900, 560); g.lineTo(930, 620); g.lineTo(790, 620); g.fill();
+  rect(856, 620, 8, 140, '#2a2d33');
+  g.save(); g.globalAlpha = 0.45; const lg = g.createLinearGradient(0, 620, 0, 900); lg.addColorStop(0, 'rgba(255,200,110,.7)'); lg.addColorStop(1, 'rgba(255,200,110,0)');
+  g.fillStyle = lg; g.beginPath(); g.moveTo(790, 620); g.lineTo(930, 620); g.lineTo(1080, 960); g.lineTo(640, 960); g.fill(); g.restore();
+  glow(860, 620, 120, 'rgba(255,210,120,.6)');
+  g.fillStyle = C.r; rr(640, 716, 46, 44, 6); g.fill(); g.strokeStyle = C.r; g.lineWidth = 8; g.beginPath(); g.arc(690, 738, 14, -1.2, 1.2); g.stroke();
+  woman(opt.wx || 330, 1010, 1.15, t, { worried: opt.worried });
+}
+S(57.6, 59.6, (t, lt) => {
+  office(t);
+  plate('ПЛАН', 540, 360, C.y, t, 58.95, { rot: -2, fs: 60 });
+});
+S(59.6, 62.0, (t, lt) => {
+  stationWall(t, { nosign: false });
+  for (let row = 0; row < 4; row++) for (let i = 0; i < 16; i++) {
+    const sd = row * 100 + i;
+    person(i * 72 + (row % 2) * 36 - 20 + rnd(sd) * 20, 900 + row * 60, 0.55 + row * 0.12, sd, t + rnd(sd) * 3);
+  }
+  plate('2 300 ЧЕЛ.', 540, 220, C.y, t, 60.3, { rot: -2, fs: 54 });
+});
+function warehouse(t) {
+  bgFill('#121418'); rect(0, 0, W, 1100, '#191c21');
+  for (let r = 0; r < 4; r++) {
+    const sy = 290 + r * 190;
+    rect(0, sy + 120, W, 14, '#3a2c22');
+    for (let i = 0; i < 18; i++) {
+      const x = 10 + i * 60;
+      if (r === 2) { g.fillStyle = '#c9a777'; rr(x, sy + 50, 50, 70, 10); g.fill(); }
+      else if (r === 3) { g.fillStyle = 'rgba(74,163,232,.75)'; rr(x + 8, sy + 40, 34, 80, 8); g.fill(); rect(x + 18, sy + 30, 14, 12, '#2a6db0'); }
+      else { rect(x, sy + 60, 50, 60, '#d6d6d6'); rect(x, sy + 75, 50, 22, C.r); }
+    }
+  }
+  g.fillStyle = '#2a2d33'; rr(330, 190, 420, 50, 6); g.fill(); text('СКЛАД ГРАЖДАНСКОЙ ОБОРОНЫ', 540, 216, 22, '#c8ccd2', { mono: true });
+}
+S(62.0, 65.2, (t, lt) => {
+  warehouse(t);
+  woman(220, 1040, 0.95, t);
+  plate('ЕДА НА 2 300 ЧЕЛ.', 560, 520, C.y, t, 62.4, { rot: -2 });
+  plate('× 14 ДНЕЙ', 680, 640, C.y, t, 64.1, { rot: 3 });
+});
+function card(x, y, t, t0, label, col, icon) {
+  const p = eback(prog(t, t0, t0 + 0.3)); if (p <= 0) return;
+  g.save(); g.translate(x, y); g.scale(p, p);
+  g.fillStyle = 'rgba(16,18,21,.95)'; rr(-140, -170, 280, 340, 18); g.fill(); g.lineWidth = 6; g.strokeStyle = col; g.stroke();
+  icon(); text(label, 0, 120, 34, col, { mono: true });
+  g.restore();
+}
+S(65.2, 70.06, (t, lt) => {
+  warehouse(t); g.save(); g.globalAlpha = 0.6; rect(0, 0, W, 1100, '#0e0f12'); g.restore();
+  plate('ЕДА НА 2 300 ЧЕЛ.', 560, 300, C.y, t, 0);
+  plate('× 14 ДНЕЙ', 680, 410, C.y, t, 0, { rot: 3 });
+  card(205, 720, t, 65.2, 'СКВАЖИНА', C.blue, () => { g.fillStyle = C.blue; g.beginPath(); g.moveTo(0, -110); g.bezierCurveTo(60, -30, 60, 40, 0, 40); g.bezierCurveTo(-60, 40, -60, -30, 0, -110); g.fill(); });
+  card(540, 720, t, 66.25, 'ГЕНЕРАТОР', C.y, () => { g.fillStyle = C.y; g.beginPath(); g.moveTo(15, -115); g.lineTo(-45, -10); g.lineTo(0, -10); g.lineTo(-15, 55); g.lineTo(50, -40); g.lineTo(5, -40); g.closePath(); g.fill(); });
+  card(875, 720, t, 67.55, 'ФИЛЬТРЫ', C.g, () => { g.save(); g.translate(0, -35); g.rotate(t * 4); for (let k = 0; k < 4; k++) { g.rotate(Math.PI / 2); g.fillStyle = C.g; g.beginPath(); g.ellipse(0, -38, 20, 38, 0.4, 0, Math.PI * 2); g.fill(); } circ(0, 0, 14, '#101215'); g.restore(); });
+});
+// 7a: control panel
+S(70.06, 73.25, (t, lt) => {
+  bgFill('#121418');
+  g.fillStyle = '#1d2026'; rr(70, 200, 940, 820, 18); g.fill(); g.strokeStyle = '#353a42'; g.lineWidth = 4; g.stroke();
+  text('ЦЕНТРАЛЬНЫЙ ПОСТ', 110, 260, 40, '#e8e8e8', { mono: true, align: 'left' });
+  text('СТАНЦИЯ «ГЛУБОКАЯ» · ГЕРМОКОНТУР', 110, 305, 20, C.gray, { mono: true, align: 'left' });
+  const rows = [['ВЫХОДЫ 1–2', 70.8], ['ВЕНТШАХТЫ 1–4', 71.45], ['ТОННЕЛИ I–II', 72.55]];
+  rows.forEach(([lab, tt], i) => {
+    const y = 380 + i * 90;
+    rect(110, y - 34, 860, 72, '#25292f');
+    text(lab, 135, y, 34, '#e8e8e8', { mono: true, align: 'left' });
+    const on = t > tt;
+    g.strokeStyle = on ? C.r : C.g; g.lineWidth = 3; rr(650, y - 22, 300, 44, 6); g.stroke();
+    text(on ? 'ЗАБЛОКИРОВАНО' : 'ОТКРЫТО', 800, y + 1, 24, on ? C.r : C.g, { mono: true });
+  });
+  text('ГЕРМОКЛАПАНЫ · 48', 110, 680, 22, C.gray, { mono: true, align: 'left' });
+  for (let r = 0; r < 4; r++) for (let i = 0; i < 12; i++) {
+    const k = r * 12 + i, on = t > 70.6 + k * 0.05;
+    circ(140 + i * 72, 740 + r * 66, 22, on ? C.g : '#2f343b');
+    if (on) glow(140 + i * 72, 740 + r * 66, 40, 'rgba(114,201,75,.35)');
+  }
+});
+// 7b: checklist
+function checklist(t, marks) {
+  g.save(); g.translate(540, 470); g.rotate(-0.02);
+  g.fillStyle = '#e9e4d6'; rr(-300, -270, 600, 520, 6); g.fill();
+  rect(-60, -290, 120, 34, 'rgba(200,180,120,.8)');
+  text('ПЛАН ВЫЖИВАНИЯ', 0, -205, 52, '#15171b');
+  rect(-250, -165, 500, 4, '#15171b');
+  const items = ['ВОЗДУХ', 'ВОДА', 'СВЕТ'];
+  items.forEach((it, i) => {
+    const y = -95 + i * 95;
+    g.strokeStyle = '#15171b'; g.lineWidth = 5; g.strokeRect(-240, y - 26, 52, 52);
+    text(it, -160, y, 54, '#15171b', { align: 'left' });
+    if (t > marks[i]) {
+      const p = prog(t, marks[i], marks[i] + 0.2);
+      g.strokeStyle = '#3d9a2a'; g.lineWidth = 10; g.beginPath(); g.moveTo(-232, y); g.lineTo(-216, y + 18 * clamp(p * 2)); if (p > .5) g.lineTo(lerp(-216, -180, (p - .5) * 2), lerp(y + 18, y - 34, (p - .5) * 2)); g.stroke();
+      text('ЕСТЬ', 200, y, 34, '#3d9a2a', { mono: true });
+    }
+  });
+  text('ЕДА', -160, 190, 54, '#15171b', { align: 'left' });
+  g.strokeStyle = '#15171b'; g.lineWidth = 5; g.strokeRect(-240, 164, 52, 52);
+  text('14 ДН.', 200, 190, 34, '#b07a10', { mono: true });
+  g.restore();
+}
+S(73.25, 77.0, (t, lt) => {
+  office(t, { wx: 180 });
+  checklist(t, [74.0, 75.2, 76.48]);
+});
+// 8
+S(77.0, 79.73, (t, lt) => {
+  office(t, { wx: 330, worried: t > 78.64 });
+  checklist(t, [0, 0, 0]);
+  if (t > 78.64) {
+    const p = prog(t, 78.64, 78.9);
+    g.save(); g.globalAlpha = 0.35 * p; rect(0, 0, W, 1100, '#e5372f'); g.restore();
+    plate('КРОМЕ ОДНОГО', 540, 900, C.r, t, 78.66, { rot: -3, fs: 50 });
+  }
+});
+S(79.73, 82.6, (t, lt) => {
+  boardScene(t, 2, true);
+});
+S(82.6, END, (t, lt) => {
+  bgFill('#0a0b0d');
+  g.save(); g.translate(540, 560);
+  for (let i = 9; i > 0; i--) { const c = 10 + i * 3; g.fillStyle = `rgb(${c},${c + 1},${c + 3})`; g.beginPath(); g.arc(0, 0, i * 70, 0, Math.PI * 2); g.fill(); }
+  g.restore();
+  g.strokeStyle = '#25282e'; g.lineWidth = 8;
+  g.beginPath(); g.moveTo(520, 580); g.lineTo(300, 1100); g.moveTo(560, 580); g.lineTo(780, 1100); g.stroke();
+  const hp = prog(t, 84.9, END);
+  if (t > 84.9) {
+    const r = lerp(6, 60, eout(hp));
+    glow(540, 560, lerp(60, 520, eout(hp)), 'rgba(255,240,200,.85)');
+    circ(540, 560, r, '#fffbe8');
+  }
+  // grate
+  for (let i = 0; i < 12; i++) rect(70 + i * 86, 160, 16, 940, '#3a3e46');
+  rect(40, 160, 1000, 22, '#3a3e46'); rect(40, 960, 1000, 22, '#3a3e46');
+  // end card
+  const e = prog(t, 86.4, 86.9);
+  if (e > 0) {
+    g.save(); g.globalAlpha = e * 0.78; rect(0, -SHIFT, W, H + SHIFT, '#0a0b0d'); g.restore();
+    g.save(); g.globalAlpha = e;
+    text('ПРОДОЛЖЕНИЕ СЛЕДУЕТ', 540, 470, 30, C.gray, { mono: true, ls: 6 });
+    g.translate(540, 600); const s = lerp(1.3, 1, eout(e)); g.scale(s, s);
+    text('ЧАСТЬ 2', 0, 0, 190, C.r, { glow: 30 });
+    g.restore();
+    plate('ТЫ БЫ ЗАКРЫЛ ЗАТВОР?', 540, 1180, C.y, t, 86.9, { fs: 46, rot: -2 });
+    if (t > 87.4) { g.save(); g.globalAlpha = prog(t, 87.4, 87.7); text('ПИШИ В КОММЕНТАРИЯХ ↓', 540, 1300, 40, C.w); g.restore(); }
+  }
+});
+
+// ---------- captions ----------
+const CHUNKS = `*rКонец *rсвета...|Станция метро|может оказаться|*gсамым *gбезопасным|местом в городе.|*yВосемьдесят *yчетыре метра|под землёй.|*yГермозатвор|*yсорок *yтонн.|Свой *gвоздух.|Но только если ты|не впустишь...|не *rтого *rчеловека.|Это *yНадежда *yОрлова.|*yСорок *yшесть лет.|*yДежурная по станции.|*yДвадцать лет она|провожала|один и тот же|последний поезд...|слушала|один и тот же|гул эскалаторов...|и закрывала|одни и те же|двери.|Но *yсегодня,|в *yноль *yчасов|*yдвенадцать *yминут,|последний поезд|*rопоздал.|А потом...|*rзавыла *rсирена.|Всем станциям.|*rЗакрыть гермозатворы.|*rНемедленно.|На мониторах|*yНадежда увидела|вестибюль.|Людей, которые|бежали вниз...|и тех, кто|бежал *rза *rними.|*yРычаг был|у неё в руке.|Ещё *yдесять человек.|Ещё *yпять.|Она дёрнула *yрычаг,|когда снаружи|оставалось|*rтридцать *rчеловек.|Они *rбили.|*rСкребли.|*rКричали.|Но *gсорок *gтонн стали|не *gсдвинулись.|А потом...|*dкрики *dстихли.|Тогда *yНадежда|составила *yплан.|На станции|*yдве *yтысячи *yтриста|человек.|На складе|гражданской обороны|еда на *yчетырнадцать *yдней.|Своя *gскважина.|*gДизель-генератор.|И *gфильтры, которые|чистят *gвоздух|с поверхности.|Она перекрыла|*yвыходы.|*yВентшахты.|Оба *yтоннеля.|Воздух?|*gЕсть.|Вода?|*gЕсть.|Свет?|*gЕсть.|*yНадежда продумала *yвсё.|*rКроме *rодного.|*rПоследний *rпоезд|так и не доехал|до станции.|А в *yтри *yчаса|*yсемь *yминут...|в тоннеле|*rзажглась *rфара.`;
+const norm = s => s.toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9-]/g, '');
+const COLS = { r: C.r, g: C.g, y: C.y, d: '#7a7f88' };
+const caps = []; let wi = 0;
+for (const ch of CHUNKS.split('|')) {
+  const toks = ch.split(' ').map(tk => {
+    let col = C.w, s = tk;
+    if (tk[0] === '*') { col = COLS[tk[1]]; s = tk.slice(2); }
+    const w = WORDS[wi++];
+    if (!w || norm(w[0]) !== norm(s)) throw new Error('align fail at ' + s + ' vs ' + (w && w[0]));
+    return { s: s.toUpperCase(), col, st: w[1], en: w[2] };
+  });
+  caps.push({ toks, st: toks[0].st - 0.06 });
+}
+if (wi !== WORDS.length) throw new Error('unused words ' + (WORDS.length - wi));
+caps.forEach((c, i) => { const last = c.toks[c.toks.length - 1].en; c.en = i + 1 < caps.length ? Math.min(caps[i + 1].st, last + 1.4) : 86.4; });
+
+function captions(t) {
+  const c = caps.find(c => t >= c.st && t < c.en); if (!c) return;
+  const p = eback(prog(t, c.st, c.st + 0.14));
+  let size = 104;
+  g.save(); g.font = `700 ${size}px Oswald`;
+  const full = () => c.toks.map(k => k.s).join(' ');
+  while (g.measureText(full()).width > 900 && size > 60) { size -= 4; g.font = `700 ${size}px Oswald`; }
+  const sp = g.measureText(' ').width;
+  const widths = c.toks.map(k => g.measureText(k.s).width);
+  const total = widths.reduce((a, b) => a + b, 0) + sp * (c.toks.length - 1);
+  g.translate(540, 1385); g.scale(lerp(0.9, 1, p), lerp(0.9, 1, p));
+  g.globalAlpha = clamp(p * 3);
+  let x = -total / 2;
+  g.textBaseline = 'middle'; g.textAlign = 'left';
+  c.toks.forEach((k, i) => {
+    const said = t >= k.st - 0.03;
+    g.shadowColor = 'rgba(0,0,0,.8)'; g.shadowBlur = 18;
+    g.fillStyle = said ? k.col : C.dim;
+    g.fillText(k.s, x, 0);
+    x += widths[i] + sp;
+  });
+  g.restore();
+}
+
+// ---------- HUD ----------
+const CLOCK = [[0, '23:58'], [26.95, '00:12'], [33.65, '00:14'], [43.1, '00:16'], [57.6, '01:30'], [70.06, '02:10'], [77.0, '02:58'], [82.9, '03:07']];
+function hud(t) {
+  if (t > 86.4) return;
+  let ci = 0; CLOCK.forEach((c, i) => { if (t >= c[0]) ci = i; });
+  const since = t - CLOCK[ci][0];
+  const flick = since < 0.25 && ci > 0 && Math.floor(since * 30) % 2 === 0;
+  text(CLOCK[ci][1], 50, 175, 92, flick ? C.r : C.w, { mono: true, align: 'left', weight: 700 });
+  text('ДЕНЬ 1', 54, 240, 26, C.r, { mono: true, align: 'left', ls: 4 });
+  // right counters
+  let people = 340;
+  if (t > 37.1) people = lerp(340, 2270, ease(prog(t, 37.1, 44.8)));
+  if (t > 44.8) people = lerp(2270, 2300, prog(t, 44.8, 48.6));
+  const rx = 1030;
+  text('НА СТАНЦИИ', rx, 135, 20, C.gray, { mono: true, align: 'right' });
+  text(fmt(people), rx, 172, 40, C.w, { mono: true, align: 'right' });
+  if (t > 33.65) {
+    const inf = 870 * Math.exp((t - 33.65) / 7.5);
+    text('ЗАРАЖЁННЫХ НАВЕРХУ', rx, 218, 20, C.gray, { mono: true, align: 'right' });
+    text(fmt(inf), rx, 255, 40, C.r, { mono: true, align: 'right' });
+  }
+  if (t > 63.7) {
+    text('ЕДА', rx, 301, 20, C.gray, { mono: true, align: 'right' });
+    text('14 ДНЕЙ', rx, 338, 40, C.y, { mono: true, align: 'right' });
+  }
+}
+
+// ---------- frame ----------
+const SHIFT = 190;
+function drawScene(sc, t) { g.save(); g.translate(0, SHIFT); sc.draw(t, t - sc.s); g.restore(); }
+function render(t) {
+  g = main;
+  main.setTransform(1, 0, 0, 1, 0, 0); main.globalAlpha = 1;
+  rect(0, 0, W, H, C.bg);
+  const idx = scenes.findIndex(s => t >= s.s && t < s.e);
+  const i = idx < 0 ? scenes.length - 1 : idx;
+  const sc = scenes[i], lt = t - sc.s, FADE = 0.22;
+  if (lt < FADE && i > 0) {
+    drawScene(scenes[i - 1], t);
+    g = offc; offc.setTransform(1, 0, 0, 1, 0, 0); offc.globalAlpha = 1; offc.clearRect(0, 0, W, H);
+    drawScene(sc, t);
+    g = main; main.globalAlpha = lt / FADE; main.drawImage(off, 0, 0); main.globalAlpha = 1;
+  } else drawScene(sc, t);
+  // bottom fade into caption area (skip on end card)
+  const fg = g.createLinearGradient(0, 1190, 0, 1320);
+  fg.addColorStop(0, 'rgba(18,20,24,0)'); fg.addColorStop(1, 'rgba(18,20,24,1)');
+  if (t < 86.4) { g.fillStyle = fg; g.fillRect(0, 1190, W, 130); rect(0, 1320, W, H - 1320, C.bg); }
+  // top shade for HUD legibility
+  const tg = g.createLinearGradient(0, SHIFT, 0, SHIFT + 140); tg.addColorStop(0, 'rgba(18,20,24,1)'); tg.addColorStop(1, 'rgba(18,20,24,0)');
+  if (t < 86.4) { rect(0, 0, W, SHIFT, C.bg); g.fillStyle = tg; g.fillRect(0, SHIFT, W, 140); }
+  // vignette
+  const vg = g.createRadialGradient(540, 700, 300, 540, 700, 1100); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  hud(t);
+  captions(t);
+}
+window.render = render;
+window.ready = Promise.all([
+  document.fonts.load('700 40px Oswald', 'АБВ123'), document.fonts.load('700 40px "JetBrains Mono"', 'АБВ123'),
+  document.fonts.load('400 40px "JetBrains Mono"', 'АБВ123')
+]).then(() => document.fonts.ready);
+</script></body></html>
