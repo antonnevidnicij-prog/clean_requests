@@ -93,6 +93,51 @@ const ALLB = {
   ['DOOR', 'Еду подают через прорезь в двери. Людей — _почти_ _не_ _видишь._', 3.4],
   ['WHO', 'Сюда отправляют тех, кого _не_ _удержала_ другая тюрьма.'],
   ['END', 'Выдержал бы здесь *месяц?*'],
+  ['END', null, 4.5]],
+ halden: [
+  ['AIR', 'Это тюрьма строгого режима. Но здесь _нет_ _решёток_ на окнах.'],
+  ['MAP', 'Халден. Норвегия. Открыта в *2010-м.*'],
+  ['STAT', 'Строили больше *10* *лет.* Стоимость — около *250* *миллионов* долларов.'],
+  ['ROOM', 'У каждого — своя камера. Душ, туалет и *телевизор.*'],
+  ['KITCH', 'На десять–двенадцать камер — общая кухня и гостиная.'],
+  ['SHOP', 'Продукты покупают в магазине при тюрьме — и готовят *сами.*'],
+  ['STAT2', 'Охранников здесь _больше,_ чем заключённых.'],
+  ['STAT3', 'В Норвегии в тюрьму снова попадает около *20%* освободившихся. Один из самых низких показателей в Европе.'],
+  ['END', 'Это наказание — или *курорт?*'],
+  ['END', null, 4.5]],
+ sanpedro: [
+  ['AIR', 'В этой тюрьме _нет_ _охраны_ внутри. Порядок держат сами заключённые.'],
+  ['MAP', 'Сан-Педро. Ла-Пас, Боливия. Прямо в центре города.'],
+  ['ROOM', 'Камеры здесь не выдают — их *покупают* или *снимают.*'],
+  ['ROOM', 'В богатом корпусе — свои кухни, ванные и кабельное ТВ.'],
+  ['FAM', 'Многие живут с семьями. Внутри — _сотни_ _детей._'],
+  ['MARKET', 'Заключённые работают: держат лавки, кафе и мастерские.'],
+  ['STAT', 'Строили на *600* человек. По разным оценкам, сейчас здесь — до *трёх* *тысяч.*'],
+  ['TOUR', 'В девяностых сюда водили _туристов_ — экскурсии вели сами заключённые.'],
+  ['END', 'Пошёл бы на такую *экскурсию?*'],
+  ['END', null, 4.5]],
+ devil: [
+  ['AIR', 'Остров в Атлантике. Пальмы, океан — и _каторга._'],
+  ['MAP', 'Остров Дьявола. Французская Гвиана.'],
+  ['HIST', 'Каторга работала *101* год — с *1852* по *1953-й.*'],
+  ['STAT', 'Сюда отправили около *80* *тысяч* заключённых. Большинство _не_ _вернулось._'],
+  ['DOS', 'Здесь *4* *года* держали капитана Дрейфуса — осуждённого _по_ _ложному_ _обвинению._'],
+  ['ESC', 'Бежать некуда: вокруг — _течения_ и _джунгли._'],
+  ['ESC2', 'Но Анри Шарьер по прозвищу *«Мотылёк»* написал, что сбежал.'],
+  ['ESC2', 'Его книга стала бестселлером, а потом — *фильмом.*'],
+  ['ESC2', 'Историки до сих пор спорят, что в ней _правда._'],
+  ['END', 'Правда — или *выдумка?*'],
+  ['END', null, 4.5]],
+ owl: [
+  ['AIR', 'Колония за Полярным кругом. Сбежать отсюда — значит _замёрзнуть._'],
+  ['MAP', '*«Полярная* *сова».* Посёлок Харп, Ямал. ИК-18.'],
+  ['HIST', 'Посёлок вырос в *60-х* — там, где раньше строили дорогу _заключённые_ _ГУЛАГа._'],
+  ['STAT', 'Здесь отбывают _пожизненное._ Около *500* заключённых.'],
+  ['COLD', 'Зимой морозы опускаются ниже *минус* *сорока.*'],
+  ['DOS', 'Здесь сидит _битцевский_ _маньяк_ — Александр Пичушкин.'],
+  ['DOS', 'Он просил перевести его поближе к Москве. Ему _отказали._'],
+  ['STAT2', 'А по соседству — ещё одна колония, *«Полярный* *волк».*'],
+  ['END', 'Что тяжелее — срок или *холод?*'],
   ['END', null, 4.5]]
 };
 const BEATS = ALLB[VID];
@@ -966,7 +1011,7 @@ function bigCard(t, t0, big, small, y = 640, col = C.t) {
   const p = popIn(t, t0, 0.4); if (p <= 0) return;
   g.save(); g.translate(540, y); g.scale(p, p);
   g.fillStyle = 'rgba(10,12,14,.88)'; rr(-400, -150, 800, 300, 26); g.fill(); g.strokeStyle = col; g.lineWidth = 5; g.stroke();
-  text(big, 0, -25, big.length > 8 ? 88 : big.length > 6 ? 110 : 160, col, { ui: true, glow: 20 }); text(small, 0, 95, 28, C.cy, { mono: true });
+  text(big, 0, -25, big.length > 11 ? 70 : big.length > 8 ? 88 : big.length > 6 ? 110 : 160, col, { ui: true, glow: 20 }); text(small, 0, 95, 28, C.cy, { mono: true });
   g.restore();
 }
 function aerial(t, v) {
@@ -1005,7 +1050,7 @@ function aerial(t, v) {
 function titleOver(t, t0, big, small, col = C.t) {
   const p = popIn(t, t0 + 0.2, 0.5); if (p <= 0) return;
   g.save(); g.globalAlpha = clamp(p); g.translate(540, 480); g.scale(lerp(1.5, 1, p), lerp(1.5, 1, p));
-  text(big, 0, 0, big.length > 8 ? 110 : 150, col, { ui: true, glow: 30 }); if (small) text(small, 0, 100, 40, C.w, { ui: true, ls: 4 }); g.restore();
+  text(big, 0, 0, big.length > 11 ? 84 : big.length > 8 ? 110 : 150, col, { ui: true, glow: 30 }); if (small) text(small, 0, 100, 40, C.w, { ui: true, ls: 4 }); g.restore();
 }
 function gridBg(col = 'rgba(240,179,58,.08)') {
   rect(0, 0, W, H, '#0b0e11'); g.strokeStyle = col; g.lineWidth = 2;
@@ -1131,8 +1176,8 @@ function escapeNight(t, t0, i0) {
   }
 }
 
-const AV = { swan: 'snow', alc: 'island', adx: 'desert' }[VID];
-const DEC_BG = { 'ВОПРОС': t => aerial(t, AV) };
+const AV = { swan: 'snow', alc: 'island', adx: 'desert', halden: 'forest', sanpedro: 'city', devil: 'jungle', owl: 'snow' }[VID];
+const DEC_BG = { 'ВОПРОС': t => (['forest', 'city', 'jungle'].includes(AV) ? aerial2 : aerial)(t, AV) };
 const first = k => BEATS.findIndex(b => b[0] === k);
 const endCard = (A, B, q) => t => { decision(t, 'ВОПРОС', 'НАПИШИ В КОММЕНТАРИЯХ', A, B, first('END'), null, null);
   const p = prog(t, T[first('END') + 1], T[first('END') + 1] + 0.5);
@@ -1170,8 +1215,123 @@ const SCN_ALL = {
   END: endCard('ДА', 'НЕТ', 'ВЫДЕРЖАЛ БЫ МЕСЯЦ?')
  }
 };
+// ---------- extra scenes (batch 2) ----------
+function aerial2(t, v) {
+  if (v === 'snow') return aerial(t, 'snow');
+  const skyTop = { forest: '#0b1a24', city: '#0a0f1e', jungle: '#0b2030' }[v], skyBot = { forest: '#3a5a6a', city: '#3a2a4a', jungle: '#2f8ca8' }[v];
+  const sky = g.createLinearGradient(0, 0, 0, 1000); sky.addColorStop(0, skyTop); sky.addColorStop(1, skyBot); g.fillStyle = sky; g.fillRect(0, 0, W, H);
+  if (v === 'city') {
+    g.fillStyle = '#1a1626'; g.beginPath(); g.moveTo(0, 760); for (let x = 0; x <= W; x += 40) g.lineTo(x, 520 - Math.abs(Math.sin(x * 0.004)) * 260 + 40 * Math.sin(x * 0.03)); g.lineTo(W, 760); g.fill();
+    circ(820, 300, 40, '#f2e8d0');
+    for (let i = 0; i < 400; i++) { const x = rnd(i) * W, y = 640 + rnd(i + 3) * 340; if (rnd(i + 9) > 0.3) rect(x, y, 4, 4, rnd(i + 5) > 0.5 ? '#ffd27a' : '#ffefc0'); }
+    rect(0, 980, W, 1000, '#211c28');
+  } else if (v === 'jungle') {
+    const sea = g.createLinearGradient(0, 700, 0, H); sea.addColorStop(0, '#1d7a8c'); sea.addColorStop(1, '#0a3a4a'); g.fillStyle = sea; g.fillRect(0, 700, W, H);
+    for (let i = 0; i < 70; i++) { const y = 720 + rnd(i) * 1100, x = (rnd(i + 3) * 1300 + t * 30 * (1 + rnd(i))) % 1300 - 100; rect(x, y, 40 + rnd(i + 1) * 90, 3, 'rgba(220,250,255,.25)'); }
+    g.fillStyle = '#2c4a22'; g.beginPath(); g.ellipse(540, 1150, 440, 180, 0, 0, Math.PI * 2); g.fill();
+    for (let i = 0; i < 14; i++) { const x = 160 + i * 55 + rnd(i) * 30, y = 1060 + rnd(i + 2) * 120; rect(x - 4, y - 120, 8, 120, '#4a3a24');
+      for (let k = 0; k < 5; k++) { g.save(); g.translate(x, y - 120); g.rotate(k * 1.25 + Math.sin(t + i) * 0.1); g.fillStyle = '#3f7a2c'; g.beginPath(); g.ellipse(40, 0, 45, 10, 0, 0, Math.PI * 2); g.fill(); g.restore(); } }
+  } else {
+    rect(0, 900, W, 1100, '#2f4a32');
+    for (let i = 0; i < 18; i++) { const x = i * 64 - 20, h = 140 + rnd(i) * 180; g.fillStyle = '#163020'; g.beginPath(); g.moveTo(x, 910); g.lineTo(x + 30, 910 - h); g.lineTo(x + 60, 910); g.fill(); }
+  }
+  g.save(); g.translate(540, v === 'jungle' ? 1120 : 1180); g.scale(1, 0.55);
+  g.strokeStyle = v === 'forest' ? '#b8c0c8' : '#4a5058'; g.lineWidth = 26; g.strokeRect(-380, -340, 760, 680);
+  for (const [x, y, w, h] of [[-280, -230, 560, 170], [-280, 60, 240, 160], [40, 60, 240, 160]]) { g.fillStyle = v === 'forest' ? '#c9a77a' : v === 'jungle' ? '#d8cbb0' : '#6a5a4a'; g.fillRect(x, y, w, h); for (let k = 0; k < w; k += 40) rect(x + k + 10, y + 20, 18, 30, rnd(k + x + y) > 0.4 ? '#ffd27a' : '#20252a'); }
+  g.restore();
+}
+function kitchen(t, t0) {
+  rect(0, 0, W, H, '#1d1a17'); rect(0, 1100, W, 900, '#3a2e24');
+  rect(80, 420, 300, 520, '#c8ccd2'); rect(90, 600, 280, 6, '#9aa0a6'); circ(350, 520, 8, '#666');
+  rect(420, 620, 300, 320, '#2a2e33'); for (const x of [470, 560, 650]) circ(x, 650, 28, '#111'); rect(420, 600, 300, 20, '#4a4f55');
+  rect(760, 420, 240, 160, '#5a7a9a'); glow(880, 500, 200, 'rgba(160,200,255,.3)');
+  rect(180, 1000, 720, 30, '#7a5a3a'); for (const x of [230, 400, 570, 740]) { rect(x, 1030, 20, 120, '#5a4028'); }
+  for (let k = 0; k < 4; k++) circ(260 + k * 170, 990, 22, ['#e0a47c', '#c98a62', '#f0c09a', '#a8704a'][k]);
+  glow(540, 600, 700, 'rgba(255,200,120,.12)');
+  stamp(t, t0 + 1, 'ОБЩАЯ КУХНЯ', 540, 330, C.t, 56);
+}
+function shop(t, t0) {
+  rect(0, 0, W, H, '#14181c');
+  for (let r = 0; r < 4; r++) { const y = 420 + r * 200; rect(80, y + 140, 920, 14, '#5a4a3a');
+    for (let i = 0; i < 15; i++) { const cols = ['#e05a3a', '#f0b33a', '#5aa04a', '#4a8ad0', '#d8d8d8']; g.fillStyle = cols[(i + r) % 5]; rr(95 + i * 60, y + 60 + rnd(i + r) * 20, 44, 80 - rnd(i + r) * 20, 6); g.fill(); } }
+  g.save(); g.translate(540 + Math.sin(t) * 40, 1230); g.strokeStyle = '#c8ccd2'; g.lineWidth = 8; g.strokeRect(-110, -70, 220, 120); g.restore();
+  stamp(t, t0 + 1, 'ГОТОВЯТ САМИ', 540, 330, C.t, 56);
+}
+function family(t, t0) {
+  rect(0, 0, W, H, '#1c1820'); rect(0, 1050, W, 900, '#3a3030');
+  for (let i = 0; i < 4; i++) { rect(i * 270, 380, 250, 640, '#2a2430'); for (let k = 0; k < 3; k++) rect(i * 270 + 30 + k * 70, 440, 50, 70, '#ffd27a'); rect(i * 270 + 80, 820, 90, 200, '#4a3a2a'); }
+  for (let i = 0; i < 14; i++) { const kid = i % 3 === 0; const x = 80 + rnd(i) * 920 + Math.sin(t * 0.8 + i) * 30; figure(x, 1200 + rnd(i + 4) * 120, kid ? 0.9 : 1.5, i + 40, t * (kid ? 1.6 : 0.6)); }
+  if (t > t0 + 0.5) stamp(t, t0 + 0.8, 'ДЕТИ ВНУТРИ', 540, 300, C.r, 56);
+}
+function market(t, t0) {
+  rect(0, 0, W, H, '#18141a'); rect(0, 1080, W, 900, '#33282a');
+  const cols = ['#e05a3a', '#f0b33a', '#4a8ad0', '#5aa04a'];
+  for (let i = 0; i < 4; i++) { const x = 40 + i * 260;
+    g.fillStyle = cols[i]; g.beginPath(); g.moveTo(x, 640); g.lineTo(x + 240, 640); g.lineTo(x + 220, 560); g.lineTo(x + 20, 560); g.fill();
+    for (let k = 0; k < 6; k++) rect(x + 20 + k * 36, 640, 18, 30, k % 2 ? '#fff' : cols[i]);
+    rect(x + 20, 860, 200, 160, '#5a4030'); for (let k = 0; k < 5; k++) circ(x + 50 + k * 36, 850, 14, cols[(i + k) % 4]);
+    figure(x + 120, 1060, 1.3, i + 70, 0); }
+  ['КАФЕ', 'ЛАВКА', 'ЦИРЮЛЬНЯ', 'МАСТЕРСКАЯ'].forEach((s, i) => text(s, 160 + i * 260, 520, 30, C.w, { ui: true }));
+}
+function thermo(t, t0, val, sub) {
+  rect(0, 0, W, H, '#0a1018');
+  for (let i = 0; i < 220; i++) { const x = (rnd(i) * 1300 - t * 160 * (0.5 + rnd(i + 2))) % 1300; const xx = x < -100 ? x + 1300 : x; const y = (rnd(i + 5) * 2000 + t * 90 * (0.5 + rnd(i + 7))) % 2000; rect(xx, y, 6, 2, 'rgba(230,240,250,.6)'); }
+  rect(480, 340, 120, 760, '#2a3440'); rect(510, 370, 60, 700, '#0d141c');
+  const p = ease(prog(t, t0 + 0.2, t0 + 1.6)); const h = lerp(560, 120, p);
+  rect(515, 1070 - h, 50, h, '#8fdcff'); circ(540, 1120, 80, '#8fdcff');
+  text(val, 790, 600, 120, '#8fdcff', { ui: true, glow: 20 }); text(sub, 790, 700, 30, C.cy, { mono: true });
+  for (let k = 0; k < 8; k++) { rect(470, 400 + k * 85, 20, 4, '#5a6a7a'); }
+}
+
+Object.assign(SCN_ALL, {
+ halden: {
+  AIR: t => { aerial2(t, 'forest'); titleOver(t, T[0], 'ХАЛДЕН', 'НОРВЕГИЯ · СТРОГИЙ РЕЖИМ'); },
+  MAP: t => mapPin(t, T[1], { x: 520, y: 820, name: 'ХАЛДЕН', sub: 'НОРВЕГИЯ · 2010', regions: [['НОРВЕГИЯ', 400, 500], ['ШВЕЦИЯ', 760, 1100]] }),
+  STAT: t => { blurBg(() => aerial2(t, 'forest')); bigCard(t, T[2], '$250 МЛН', 'СТРОИЛИ 10+ ЛЕТ', 700); },
+  ROOM: t => { cellPlan(t, T[3], { w: 560, h: 780, wl: 'СВОЯ КАМЕРА', hl: '', window: true, items: [['КРОВАТЬ', 20, 40, 190, 380, '#c9a77a'], ['ТВ', 330, 40, 200, 60, '#4a8ad0'], ['СТОЛ', 330, 200, 200, 110, '#c9a77a'], ['ДУШ', 300, 560, 230, 100, '#8fdcff'], ['ТУАЛЕТ', 360, 680, 160, 80, '#d8d8d8']] }); },
+  KITCH: t => kitchen(t, T[4]),
+  SHOP: t => shop(t, T[5]),
+  STAT2: t => { rect(0, 0, W, H, '#0e1114'); for (let i = 0; i < 6; i++) figure(150 + i * 150, 1050, 1.6, i + 300, 0); for (let i = 0; i < 4; i++) figure(260 + i * 190, 1300, 1.3, i + 7, 0); bigCard(t, T[6], 'ОХРАНЫ > ЗЭК', 'ПО СЛОВАМ СОТРУДНИКОВ', 520); },
+  STAT3: t => { blurBg(() => aerial2(t, 'forest')); bigCard(t, T[7], '~20%', 'РЕЦИДИВ В НОРВЕГИИ', 700, C.g || '#72c94b'); },
+  END: endCard('НАКАЗАНИЕ', 'КУРОРТ', 'ЧТО ДУМАЕШЬ?')
+ },
+ sanpedro: {
+  AIR: t => { aerial2(t, 'city'); titleOver(t, T[0], 'САН-ПЕДРО', 'ЛА-ПАС · БОЛИВИЯ'); },
+  MAP: t => mapPin(t, T[1], { x: 520, y: 820, name: 'ЛА-ПАС', sub: 'ТЮРЬМА В ЦЕНТРЕ ГОРОДА', regions: [['БОЛИВИЯ', 540, 520], ['ПЕРУ', 240, 1100]] }),
+  ROOM: t => { cellPlan(t, T[2], { w: 600, h: 760, wl: 'КАМЕРА', hl: '', items: [['КРОВАТЬ', 20, 40, 200, 360, '#c9a77a'], ['КУХНЯ', 300, 40, 260, 120, '#d8d8d8'], ['ТВ', 330, 220, 200, 70, '#4a8ad0'], ['ВАННАЯ', 300, 560, 260, 160, '#8fdcff']] }); stamp(t, T[2] + 1.2, 'ПРОДАЁТСЯ', 540, 860, C.a, 60); if (t > T[3]) stamp(t, T[3] + 0.2, 'КОРПУС ДЛЯ БОГАТЫХ', 540, 330, C.t, 46); },
+  FAM: t => family(t, T[4]),
+  MARKET: t => market(t, T[5]),
+  STAT: t => { rect(0, 0, W, H, '#0b0e11'); for (let r = 0; r < 8; r++) for (let c = 0; c < 10; c++) figure(70 + c * 105 + (r % 2) * 50, 500 + r * 120, 0.6 + r * 0.06, r * 10 + c, 0); bigCard(t, T[6], '600 → 3000', 'МЕСТ → ЗАКЛЮЧЁННЫХ', 700, C.r); },
+  TOUR: t => { aerial2(t, 'city'); for (let i = 0; i < 6; i++) figure(300 + i * 90 + Math.sin(t + i) * 10, 1500, 1.2, i + 500, t); stamp(t, T[7] + 0.6, 'ЭКСКУРСИЯ', 540, 640, C.t, 64); },
+  END: endCard('ДА', 'НИ ЗА ЧТО', 'ПОШЁЛ БЫ?')
+ },
+ devil: {
+  AIR: t => { aerial2(t, 'jungle'); titleOver(t, T[0], 'ОСТРОВ ДЬЯВОЛА', 'ФРАНЦУЗСКАЯ ГВИАНА'); },
+  MAP: t => mapPin(t, T[1], { x: 600, y: 760, name: 'ОСТРОВ ДЬЯВОЛА', sub: 'АТЛАНТИЧЕСКИЙ ОКЕАН', regions: [['ГВИАНА', 380, 1100], ['ОКЕАН', 760, 480]] }),
+  HIST: t => parchment(t, T[2], '1852', '— 1953 · 101 ГОД КАТОРГИ'),
+  STAT: t => { rect(0, 0, W, H, '#0b0e11'); for (let r = 0; r < 8; r++) for (let c = 0; c < 10; c++) { g.save(); g.globalAlpha = rnd(r * 10 + c) > 0.25 ? 0.25 : 1; figure(70 + c * 105 + (r % 2) * 50, 500 + r * 120, 0.6 + r * 0.06, r * 10 + c, 0); g.restore(); } bigCard(t, T[3], '~80 000', 'ЗАКЛЮЧЁННЫХ · БОЛЬШИНСТВО НЕ ВЕРНУЛОСЬ', 700, C.r); },
+  DOS: t => dossier(t, T[4], 'ДРЕЙФУС А.', ['КАПИТАН АРМИИ ФРАНЦИИ', 'ЛОЖНОЕ ОБВИНЕНИЕ', 'НА ОСТРОВЕ · 1895–1899'], 'ОПРАВДАН'),
+  ESC: t => { aerial2(t, 'jungle'); stamp(t, T[5] + 0.4, 'ТЕЧЕНИЯ', 330, 560, C.r, 50, -0.1); stamp(t, T[5] + 1.0, 'ДЖУНГЛИ', 740, 700, C.r, 50, 0.08); },
+  ESC2: t => { const sea = g.createLinearGradient(0, 0, 0, H); sea.addColorStop(0, '#0a2030'); sea.addColorStop(1, '#05121c'); g.fillStyle = sea; g.fillRect(0, 0, W, H);
+    for (let i = 0; i < 120; i++) { const y = 400 + rnd(i) * 1500, x = (rnd(i + 3) * 1300 + t * 60 * (1 + rnd(i))) % 1300 - 100; rect(x, y, 60 + rnd(i + 1) * 120, 3, 'rgba(140,200,220,.2)'); }
+    g.save(); g.translate(540, 1000 + Math.sin(t * 2) * 12); g.rotate(Math.sin(t * 1.3) * 0.08); g.fillStyle = '#7a5a2a'; rr(-200, -40, 400, 80, 30); g.fill(); figure(0, -30, 1.4, 9, 0); g.restore();
+    if (t > T[7]) { const p = popIn(t, T[7], 0.4); g.save(); g.translate(540, 520); g.scale(p, p); g.fillStyle = '#e9e4d6'; rr(-170, -230, 340, 460, 10); g.fill(); text('PAPILLON', 0, -150, 50, '#15171b', { ui: true }); g.fillStyle = '#4a8ad0'; g.beginPath(); g.ellipse(-50, 0, 60, 90, -0.4, 0, Math.PI * 2); g.ellipse(50, 0, 60, 90, 0.4, 0, Math.PI * 2); g.fill(); text('1969', 0, 170, 40, '#15171b', { ui: true }); g.restore(); }
+    if (t > T[8]) stamp(t, T[8] + 0.3, 'ПРАВДА?', 540, 900, C.a, 60); },
+  END: endCard('ПРАВДА', 'ВЫДУМКА', 'КАК ДУМАЕШЬ?')
+ },
+ owl: {
+  AIR: t => { aerial2(t, 'snow'); titleOver(t, T[0], 'ПОЛЯРНАЯ СОВА', 'ИК-18 · ХАРП'); },
+  MAP: t => mapPin(t, T[1], { x: 560, y: 760, name: 'ХАРП', sub: 'ЯМАЛ · ЗА ПОЛЯРНЫМ КРУГОМ', regions: [['КАРСКОЕ МОРЕ', 540, 440], ['УРАЛ', 300, 1100]] }),
+  HIST: t => parchment(t, T[2], '1960-е', 'ПОСЁЛОК НА МЕСТЕ СТРОЙКИ ГУЛАГА'),
+  STAT: t => { rect(0, 0, W, H, '#0e1114'); bars(t, 0.6); bigCard(t, T[3], '~500', 'ПОЖИЗНЕННО ОСУЖДЁННЫХ', 700, C.r); },
+  COLD: t => thermo(t, T[4], '−40°', 'И НИЖЕ'),
+  DOS: t => dossier(t, T[5], 'ПИЧУШКИН А.', ['«БИТЦЕВСКИЙ МАНЬЯК»', 'ПОЖИЗНЕННЫЙ СРОК', 'ИК-18 · ХАРП'], t > T[6] ? 'ОТКАЗАНО' : 'ИК-18'),
+  STAT2: t => { blurBg(() => aerial2(t, 'snow')); bigCard(t, T[7], 'ПОЛЯРНЫЙ ВОЛК', 'ИК-3 · ПО СОСЕДСТВУ', 700); },
+  END: endCard('СРОК', 'ХОЛОД', 'ЧТО ТЯЖЕЛЕЕ?')
+ }
+});
 const SCN = SCN_ALL[VID];
-const HUDC = { swan: ['ИК-2 · «БЕЛЫЙ ЛЕБЕДЬ»', 'ПЕРМСКИЙ КРАЙ', 'ОСОБЫЙ РЕЖИМ'], alc: ['АЛЬКАТРАС · «СКАЛА»', 'САН-ФРАНЦИСКО', 'ВОДА +12 °C'], adx: ['ADX FLORENCE · SUPERMAX', 'КОЛОРАДО, США', 'ПОБЕГОВ: 0'] }[VID];
+const HUDC = { halden: ['ХАЛДЕН · НОРВЕГИЯ', 'НОРВЕГИЯ', 'РЕШЁТОК: 0'], sanpedro: ['САН-ПЕДРО · БОЛИВИЯ', 'ЛА-ПАС', 'ОХРАНЫ ВНУТРИ: 0'], devil: ['ОСТРОВ ДЬЯВОЛА', 'ФР. ГВИАНА', '1852–1953'], owl: ['ИК-18 · «ПОЛЯРНАЯ СОВА»', 'ЯМАЛ', 'ДО −40 °C'], swan: ['ИК-2 · «БЕЛЫЙ ЛЕБЕДЬ»', 'ПЕРМСКИЙ КРАЙ', 'ОСОБЫЙ РЕЖИМ'], alc: ['АЛЬКАТРАС · «СКАЛА»', 'САН-ФРАНЦИСКО', 'ВОДА +12 °C'], adx: ['ADX FLORENCE · SUPERMAX', 'КОЛОРАДО, США', 'ПОБЕГОВ: 0'] }[VID];
 
 // ---------- HUD ----------
 function hud(t) {

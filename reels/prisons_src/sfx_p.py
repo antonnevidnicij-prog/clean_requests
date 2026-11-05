@@ -13,7 +13,7 @@ def boom(at,amp,f=45,dec=4):
     s=seg(at,at+2.5); tt=t[s]-at
     out[s]+=amp*(np.sin(2*np.pi*f*tt*(1-0.3*tt/2.5))*np.exp(-tt*dec)+0.5*band(noise[s],40,350)*np.exp(-tt*dec*2))
 out+=0.05*(0.5*np.sin(2*np.pi*41*t)+0.3*np.sin(2*np.pi*61.5*t)+0.5*band(noise,30,120))
-amb={'swan':(200,1500,0.07),'alc':(80,900,0.09),'adx':(300,2500,0.05)}[V]
+amb={'halden':(200,1200,0.04),'sanpedro':(300,2500,0.06),'devil':(80,900,0.09),'owl':(200,1500,0.08),'swan':(200,1500,0.07),'alc':(80,900,0.09),'adx':(300,2500,0.05)}[V]
 gust=np.interp(t,np.arange(N//2400+2)*0.05,np.convolve(rng.random(N//2400+2),np.ones(3)/3,'same'))
 out+=amb[2]*band(noise,amb[0],amb[1])*(0.5+0.5*gust)
 boom(T[0]+0.3,0.6,40,2.5)
