@@ -1117,7 +1117,7 @@ function escapeNight(t, t0, i0) {
     circ(320, 920, 70, '#d9a07a'); g.fillStyle = '#5a3a20'; g.beginPath(); g.arc(320, 905, 74, Math.PI, 0); g.fill(); rect(380, 900, 440, 150, '#8a9096');
     g.save(); g.globalCompositeOperation = 'lighter'; const fx = 320 + Math.sin(t * 1.5) * 60; const fl = g.createRadialGradient(fx, 920, 0, fx, 920, 300); fl.addColorStop(0, 'rgba(255,240,200,.35)'); fl.addColorStop(1, 'rgba(255,240,200,0)'); g.fillStyle = fl; g.fillRect(0, 0, W, H); g.restore();
     rect(700, 560, 160, 120, '#0a0c0e'); for (let i = 0; i < 6; i++) rect(706 + i * 26, 566, 8, 108, '#5a616a');
-    stamp(t, t0 + 1.2, 'ГОЛОВА-МАНЕКЕН', 540, 1250, C.a, 48);
+    stamp(t, t0 + 1.2, 'ГОЛОВА-МАНЕКЕН', 540, 330, C.a, 52);
   } else {
     const sea = g.createLinearGradient(0, 0, 0, H); sea.addColorStop(0, '#05080c'); sea.addColorStop(1, '#0a1824'); g.fillStyle = sea; g.fillRect(0, 0, W, H);
     for (let i = 0; i < 24; i++) rect(i * 46, 500 - rnd(i) * 80, 36, 80 + rnd(i) * 80, '#0b1016');
